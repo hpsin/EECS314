@@ -4,7 +4,9 @@ main:
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 
-	nop # todo
+	li $v0, 4
+	la $a0, splash_screen
+	syscall
 
 	# restore the resturn address and return
 	lw $ra, 0($sp)
