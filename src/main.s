@@ -25,35 +25,33 @@ main:
 	nop
 
 read_command:
-	li $t0, 0xA
-	la $t1, input_string # start of the input buffer
+	li $s0, 0xA
+	la $s1, input_string # start of the input buffer
 
 	# now loop reading characters until a newline is detected
 read_command_loop:
 	li $v0, 12
 	syscall
 
-	sb $v0, ($t1)
-	addi $t1, $t1, 1
+	add $s2, $v0, $zero
 	
-	bne $v0, $t0, read_command_loop
-
-	# terminate string
-	add $t2, $zero, $zero # null terminater
-	sb $t2, ($t1)
-	addi $t1, $t1, 1
-	la $a0, input_string
-	add $a1, $t1, $zero
+	sb $v0, ($s1)
+	addi $s1, $s1, 1
+	sb $zero, ($s1) # terminate the string
 
 	# stick the resturn address on the stack
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 
+	la $a0, input_string
+	add $a1, $s1, $zero
 	jal refresh_screen
 
 	# restore the resturn address and return
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
+
+	bne $s2, $s0, read_command_loop
 
 	j read_command
 	jr $ra
