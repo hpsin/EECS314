@@ -27,6 +27,8 @@ main:
 read_command:
 	li $s0, 0xA
 	la $s1, input_string # start of the input buffer
+	li $s3, 0x8
+	li $s4, 0x7f
 
 	# now loop reading characters until a newline is detected
 read_command_loop:
@@ -34,11 +36,26 @@ read_command_loop:
 	syscall
 
 	add $s2, $v0, $zero
+
+	# check for backspace
+	bne $s2, $s3, check_for_del
+	j remove_char
+	
+check_for_del:	
+	bne $s2, $s4, append_char
+	
+remove_char:
+	addi $s1, $s1, -1
+	sb $zero, ($s1)
+	j finish_str_update
+	
+append_char:	
 	
 	sb $v0, ($s1)
 	addi $s1, $s1, 1
 	sb $zero, ($s1) # terminate the string
 
+finish_str_update:	
 	# stick the resturn address on the stack
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
