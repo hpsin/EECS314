@@ -4,3 +4,5 @@ splash_screen:	 .asciiz "\n\n                                           |\\n    
 clear_screen:	.asciiz "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
 
 input_prompt:	.asciiz "$ "
+
+test_str:	.asciiz "test input"
