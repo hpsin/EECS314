@@ -8,6 +8,13 @@ main:
 	la $a0, splash_screen
 	syscall
 
+	li $v0, 12
+	syscall
+
+	li $v0, 4
+	la $a0, clear_screen
+	syscall
+
 	# restore the resturn address and return
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
