@@ -12,4 +12,4 @@ clean:
 	@rm -f $(OUTPUT)
 
 run: main
-	qtspim -file mmps.s
+	mars mmps.s
