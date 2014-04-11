@@ -78,6 +78,10 @@ finish_str_update:
 	li $t0, 0xA
 	bne $t2, $t0, read_command_loop
 
+	# parse the command
+	la $a0, input_string
+	jal parse_input
+	
 	j read_command
 	jr $ra
 	nop
