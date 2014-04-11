@@ -1,7 +1,7 @@
 .PHONY: clean all run
 
 OUTPUT = mmps.s
-INPUT = src/main.s src/strings.s
+INPUT = src/main.s src/strings.s src/backspace_handler.s
 
 all: main
 
