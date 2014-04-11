@@ -108,14 +108,7 @@ refresh_screen:
 	li $a0, 0xA
 	syscall
 
-	# figure out the number of blanks line needed
-	# to redraw the screen
-	addi $t0, $zero, 30
-	addi $t1, $zero, 50
-	sub $t2, $a1, $t2
-	div $t2, $t1
-	mflo $t1
-	sub $t0, $t0, $t1
+	li $t0, 73
 	li $v0, 11
 	la $a0, 0xA
 blank_line_loop:
