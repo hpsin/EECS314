@@ -266,7 +266,77 @@ parse_unknown:
 	add $a1, $zero, $zero
 	jr $ra
 
+# takes in an ascii string
+# representing an int and
+# returns an integer. This method
+# will read the characters until either
+# a space or null character is found.
+# if something other than an ascii character 0 through 9
+# is encountered the method will terminate with an error code
+# input: $a0 ascii string
+# output: $a0 integer
+#         $a1 0 if no error
+str_to_int:
+	add $t0, $zero, $a0 # save $a0
+
+	add $a1, $zero, $zero
+	add $a0, $zero, $zero
+	
+	# see if the first character is negative sign
+	lb $t1, 0($t0)
+	li $t2, 0x2D
+	bne $t1, $t2, str_to_int_loop
+
+	addi $t7, $zero, 1 # mark the number as negative
+	addi $t0, $t0, 1
+	lb $t1, 0($t0)
+	
+str_to_int_loop:
+	# if this is a null character then end the loop
+	beq $t1, $zero, str_to_int_loop_end
+
+	# if this is a space then end the loop
+	li $t2, 0x20
+	beq $t1, $t2, str_to_int_loop_end
+
+	# make sure this is not a number < '0'
+	li $t2, 0x30
+	blt $t1, $t2, str_to_int_bad_char
+
+	# make sure this not a number > '9'
+	li $t2, 0x39
+	bgt $t1, $t2, str_to_int_bad_char
+
+	# multiply the result by 10
+	li $t2, 10
+	mult $a0, $t2
+	mflo $a0
+
+	# find out the character - '0' value
+	li $t2, 0x30
+	sub $t3, $t1, $t2
+	# add the character to the result
+	add $a0, $a0, $t3
+	
+	# move the char pointer forward one
+	addi $t0, $t0, 1
+	lb $t1, 0($t0)
+	
+	j str_to_int_loop
+
+str_to_int_bad_char:
+	addi $a1, $zero, 1
+	
+str_to_int_loop_end:
+	# if the number is negative then subtract the result from 0
+	beq $t7, $zero, str_to_int_return
+	sub $a0, $zero, $a0
+
+str_to_int_return:	
+	jr $ra
+	
+
 	.data
 a4: .word 0
 a5: .word 0
-str_int: .space 10 # string to be converted to int is copied here first
+str_int: .space 11 # string to be converted to int is copied here first
