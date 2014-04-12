@@ -276,10 +276,6 @@ parse_play_note_end:
 	jr $ra
 	
 parse_play_song:	
-	# check if fifth character is a space
-	li $t1, 0x20
-	bne $t0, $t1, parse_unknown
-
 	addi $a0, $zero, 1
 	jr $ra
 

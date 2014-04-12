@@ -92,25 +92,90 @@ finish_str_update:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 
-	# see if it is the play note
+	# check for an error
+	li $t0, -1
+	beq $a0, $t0, call_unknown
+
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	
+	li $t0, 1
+	beq $a0, $t0, call_play_song
 	li $t0, 2
-	bne $a0, $t0, read_command
+	beq $a0, $t0, call_play_note
+	li $t0, 3
+	beq $a0, $t0, call_add_rest
+	li $t0, 4
+	beq $a0, $t0, call_add_note
+	li $t0, 5
+	beq $a0, $t0, call_cat
+	li $t0, 6
+	beq $a0, $t0, call_load
+	li $t0, 7
+	beq $a0, $t0, call_save
+	li $t0, 8
+	beq $a0, $t0, call_help
+	j call_unknown
 
-	add $t0, $a1, $zero
-	add $t1, $a3, $zero
-	lw $t2, a4
-	li $t3, 127 # this would normally come from $a2, but for now hardcoded
+call_play_song:
+	jal play_song
+	j command_finished
 
-	add $a0, $t0, $zero
-	add $a1, $t1, $zero
-	add $a2, $t2, $zero
-	add $a3, $t3, $zero
+call_play_note:
+	add $a0, $zero, $a1
+	add $a1, $zero, $a2
+	add $a2, $zero, $a3
+	lw $a3, a4	
+	jal play_note
+	j command_finished
 
+call_add_rest:
+	add $a0, $zero, $a1
+	jal add_rest
+	j command_finished
+	
+call_add_note:
+	add $a0, $zero, $a1
+	add $a1, $zero, $a2
+	add $a2, $zero, $a3
+	lw $a3, a4	
+	jal add_note
+	j command_finished
+
+call_cat:
+	jal cat
+	j command_finished
+
+call_load:
+	la $a0, filename
+	jal load_file
+	j command_finished
+
+call_save:
+	la $a0, filename
+	jal save_file
+	j command_finished
+
+call_help:
+	jal help
+	j command_finished
+
+call_unknown:
+	li $v0, 4
+	la $a0, error_message
+	syscall
+
+	li $v0, 12
+	syscall
+	j command_finished
+	
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 
 	jal play_note
 
+command_finished:	
+	
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 	
@@ -156,3 +221,4 @@ blank_line_loop:
 
 .data
 input_string: .space 100 # 99 char string
+error_message: .asciiz "ERROR: Unknown or malformed command\n [Press Enter]"
