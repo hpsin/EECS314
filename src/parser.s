@@ -4,7 +4,10 @@
 # $a0 start of input string
 # and returns
 # $a0 command code
-# $a1 heap allocated list of arguments
+# $a1 parsed arg1
+# $a2 parsed arg2
+# $a3 parsed arg3
+# additional arguments are stored in memory a4, and a5
 
 # command codes are as follows
 # play song = 1
@@ -58,6 +61,13 @@ parse_add:
 	# see if fourth character is a space
 	li $t1, 0x20
 	bne $t0, $t1, parse_unknown
+
+	# find next non-space
+	addi $sp, $sp, -4
+	sw $a0, 0($sp)
+
+	add $a0, $t2, $zero
+	jal str_to_int
 
 	addi $a0, $zero, 3
 	add $a1, $zero, $zero
@@ -255,3 +265,8 @@ parse_unknown:
 	addi $a0, $zero, -1
 	add $a1, $zero, $zero
 	jr $ra
+
+	.data
+a4: .word 0
+a5: .word 0
+str_int: .space 10 # string to be converted to int is copied here first
