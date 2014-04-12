@@ -344,6 +344,17 @@ parse_load:
 	li $t1, 0x20
 	bne $t0, $t1, parse_unknown
 
+	# extract the filename string
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+
+	add $a0, $t2, 1
+	la $a1, filename
+	jal str_copy
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
 	addi $a0, $zero, 6
 	add $a1, $zero, $zero
 	jr $ra
@@ -381,6 +392,17 @@ parse_save:
 	li $t1, 0x20
 	bne $t0, $t1, parse_unknown
 
+	# extract the filename string
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+
+	add $a0, $t2, 1
+	la $a1, filename
+	jal str_copy
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	
 	addi $a0, $zero, 7
 	add $a1, $zero, $zero
 	jr $ra
@@ -659,9 +681,32 @@ str_to_int_loop_end:
 str_to_int_return:
 	add $a2, $zero, $t0
 	jr $ra
-	
 
+# takes as input a pointer to the start of a string
+# it then copies bytes into the specified memory
+# until either a space or a null character is hit.
+# this method will then terminate the copied string with a null character
+# input: $a0 source string
+# 	 $a1 target string
+str_copy:
+	lb $t0, 0($a0)
+	beq $t0, $zero, str_copy_loop_end
+	li $t1, 0x20
+	beq $t0, $t1, str_copy_loop_end
+
+	# copy the character
+	sb $t0, 0($a1)
+
+	addi $a0, $a0, 1
+	addi $a1, $a1, 1
+	j str_copy
+	
+str_copy_loop_end:
+	sb $zero, 0($a1)
+	jr $ra
+	
+	
 	.data
 a4: .word 0
 a5: .word 0
-str_int: .space 11 # string to be converted to int is copied here first
+filename: .space 256
