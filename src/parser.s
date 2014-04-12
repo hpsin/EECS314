@@ -138,7 +138,7 @@ parse_add_note_arg4:
 	sw $ra, 0($sp)
 
 	# convert the fourth argument
-	add $a0, $a2, $zero
+	addi $a0, $a2, 1
 	jal str_to_int
 
 	lw $ra, 0($sp)
@@ -152,12 +152,12 @@ parse_add_note_arg4:
 	j parse_unknown
 	
 parse_add_note_end:	
-	
+
+	sw $a0, a4
 	addi $a0, $zero, 4
 	lw $a1, 8($sp)
 	lw $a2, 4($sp)
 	lw $a3, 0($sp)
-	sw $a0, a4
 	addi $sp, $sp, 12
 	jr $ra
 
@@ -191,11 +191,88 @@ parse_play:
 	lb $t0, 0($t2)
 
 	# check if fifth character is a null
-	bne $t0, $zero, parse_play_song
+	beq $t0, $zero, parse_play_song
 
-	# parse play not command
+	# parse play note args
+	addi $sp, $sp, -4
+	sw $ra 0($sp)
+
+	addi $a0, $t2, 1
+	jal str_to_int
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
+	# an error occurred while converted
+	bne $a1, $zero, parse_unknown
+
+	addi $sp, $sp, -8
+	sw $a0, 4($sp)
+	sw $ra, 0($sp)
+
+	# parse the velocity
+	addi $a0, $a2, 1
+	jal parse_velocity
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
+	# make sure a valid velocity was entered
+	li $t0, -1
+	bne $t0, $a0, parse_play_note_arg3
+
+	# pop the stack and jump to parse_unknownb
+	addi $sp, $sp, 4
+	j parse_unknown
+	
+parse_play_note_arg3:	
+	# store the velocity on the stack
+	addi $sp, $sp -8
+	sw $a0, 4($sp)
+	sw $ra, 0($sp)
+
+	# convert the third argument
+	addi $a0, $a1, 1
+	jal str_to_int
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
+	# make sure no errors occurred
+	beq $a1, $zero, parse_play_note_arg4
+
+	# pop the stack and jump to parse unknown
+	addi $sp, $sp, 8
+	j parse_unknown
+
+parse_play_note_arg4:
+	# store the duration on the stack
+	addi $sp, $sp, -8
+	sw $a0, 4($sp)
+	sw $ra, 0($sp)
+
+	# convert the fourth argument
+	addi $a0, $a2, 1
+	jal str_to_int
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
+	# make sure no errors occurred
+	beq $a1, $zero, parse_play_note_end
+
+	# pop the stack and jump to parse_unknown
+	addi $sp, $sp, 12
+	j parse_unknown
+	
+parse_play_note_end:	
+
+	sw $a0, a4
 	addi $a0, $zero, 2
-	add $a1, $zero, $zero
+	lw $a1, 8($sp)
+	lw $a2, 4($sp)
+	lw $a3, 0($sp)
+	addi $sp, $sp, 12
 	jr $ra
 	
 parse_play_song:	
@@ -204,7 +281,6 @@ parse_play_song:
 	bne $t0, $t1, parse_unknown
 
 	addi $a0, $zero, 1
-	add $a1, $zero, $zero
 	jr $ra
 
 parse_cat:

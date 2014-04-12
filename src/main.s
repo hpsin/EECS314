@@ -83,8 +83,36 @@ finish_str_update:
 	sb $zero 0($t1)
 	
 	# parse the command
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	
 	la $a0, input_string
 	jal parse_input
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
+	# see if it is the play note
+	li $t0, 2
+	bne $a0, $t0, read_command
+
+	add $t0, $a1, $zero
+	add $t1, $a3, $zero
+	lw $t2, a4
+	li $t3, 127 # this would normally come from $a2, but for now hardcoded
+
+	add $a0, $t0, $zero
+	add $a1, $t1, $zero
+	add $a2, $t2, $zero
+	add $a3, $t3, $zero
+
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+
+	jal play_note
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
 	
 	j read_command
 	jr $ra
