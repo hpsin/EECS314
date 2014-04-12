@@ -62,15 +62,103 @@ parse_add:
 	li $t1, 0x20
 	bne $t0, $t1, parse_unknown
 
-	# find next non-space
+	# parse the next set of characters to an integer
 	addi $sp, $sp, -4
-	sw $a0, 0($sp)
-
-	add $a0, $t2, $zero
+	sw $ra, 0($sp)
+	
+	addi $a0, $t2, 1
 	jal str_to_int
 
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
+	# error occured while converting
+	bne $a1, $zero, parse_unknown
+
+	add $t2, $zero, $a2
+	
+	# see if the last character parsed was string
+	# or a null character
+	lb $t0, 0($t2)
+	bne $t0, $zero, parse_add_note
+
+	# set the arguments and return
+	add $a1, $a0, $zero
 	addi $a0, $zero, 3
-	add $a1, $zero, $zero
+	jr $ra
+
+parse_add_note:
+
+	# get the next character
+	addi $t2, $t2, 1
+
+	addi $sp, $sp, -8
+	sw $a0, 4($sp)
+	sw $ra, 0($sp)
+
+	# parse the velocity
+	add $a0, $zero, $t2
+	jal parse_velocity
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
+	# make sure a valid velocity was entered
+	li $t0, -1
+	bne $t0, $a0, parse_add_note_arg3
+
+	# pop the stack and jump to parse_unknown
+	addi $sp, $sp, 4
+	j parse_unknown
+	
+parse_add_note_arg3:
+	# store the velocity on the stack
+	addi $sp, $sp, -8
+	sw $a0, 4($sp)
+	sw $ra, 0($sp)
+
+	# convert the third argument
+	addi $a0, $a1, 1
+	jal str_to_int
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	
+	# make sure no errors occurred
+	beq $a1, $zero, parse_add_note_arg4
+
+	# pop the stock and jump to parse_unknown
+	addi $sp, $sp, 8
+	j parse_unknown
+	
+parse_add_note_arg4:
+	# store the duration on the stack
+	addi $sp, $sp, -8
+	sw $a0, 4($sp)
+	sw $ra, 0($sp)
+
+	# convert the fourth argument
+	add $a0, $a2, $zero
+	jal str_to_int
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
+	# make sure no errors occurred
+	beq $a1, $zero, parse_add_note_end
+
+	# pop the stack and jump to parse_unknown
+	addi $sp, $sp, 12
+	j parse_unknown
+	
+parse_add_note_end:	
+	
+	addi $a0, $zero, 4
+	lw $a1, 8($sp)
+	lw $a2, 4($sp)
+	lw $a3, 0($sp)
+	sw $a0, a4
+	addi $sp, $sp, 12
 	jr $ra
 
 parse_play:
@@ -102,9 +190,8 @@ parse_play:
 	addi $t2, $t2, 1
 	lb $t0, 0($t2)
 
-	# check if fifth character is a newline
-	li $t1, 0xA
-	bne $t0, $t1, parse_play_song
+	# check if fifth character is a null
+	bne $t0, $zero, parse_play_song
 
 	# parse play not command
 	addi $a0, $zero, 2
@@ -141,9 +228,8 @@ parse_cat:
 	addi $t2, $t2, 1
 	lb $t0, 0($t2)
 
-	# check if fourth character is a newline
-	li $t1, 0xA
-	bne $t0, $t1, parse_unknown
+	# check if fourth character is a null
+	bne $t0, $zero, parse_unknown
 
 	addi $a0, $zero, 5
 	add $a1, $zero, $zero
@@ -252,9 +338,8 @@ parse_help:
 	addi $t2, $t2, 1
 	lb $t0, 0($t2)
 
-	# check if fifth character is a newline
-	li $t1, 0xA
-	bne $t0, $t1, parse_unknown
+	# check if fifth character is a null
+	bne $t0, $zero, parse_unknown
 
 	addi $a0, $zero, 8
 	add $a1, $zero, $zero
@@ -267,6 +352,168 @@ parse_unknown:
 	jr $ra
 
 # takes in an ascii string
+# returns a code specifying which velocity it is
+# input: $a0 start of string
+# output: $a0 velocity code
+#	  $a1 last character parsed
+
+# velocity codes are as follows:
+# pp = 1
+# p = 2
+# mp = 3
+# mf = 4
+# f = 5
+# ff = 6
+# unknown = -1
+parse_velocity:
+
+	# check the first character
+	lb $t0, 0($a0)
+
+	li $t1, 0x70
+	beq $t0, $t1, parse_velocity_p
+	li $t1, 0x6D
+	beq $t0, $t1, parse_velocity_m
+	li $t1, 0x66
+	beq $t0, $t1, parse_velocity_f
+
+	j parse_velocity_unknown
+
+parse_velocity_p:
+	# check the next character
+	addi $a0, $a0, 1
+	lb $t0, 0($a0)
+
+	# if this is a space or null then
+	# the velocity is pianissimo
+	beq $t0, $zero, parse_velocity_p_end
+	li $t1, 0x20
+	beq $t0, $t1, parse_velocity_p_end
+
+	# if this is a p then the velocity may be pp
+	li $t1, 0x70
+	beq $t0, $t1, parse_velocity_pp
+
+	# otherwise something was entered wrong
+	j parse_velocity_unknown
+parse_velocity_p_end:
+	add $a1, $a0, $zero
+	li $a0, 2
+	jr $ra
+	
+parse_velocity_pp:
+	# make sure the next character is either a space or null
+	addi $a0, $a0, 1
+	lb $t0, 0($a0)
+
+	# if this is a space or null then
+	# the velocity is pianissimo
+	beq $t0, $zero, parse_velocity_pp_return
+	li $t1, 0x20
+	beq $t0, $t1, parse_velocity_pp_return
+
+	j parse_velocity_unknown
+	
+parse_velocity_pp_return:	
+	add $a1, $a0, $zero
+	li $a0, 1
+	jr $ra
+
+parse_velocity_m:	
+	addi $a0, $a0, 1
+	lb $t0, 0($a0)
+
+	# see if this is a p
+	li $t1, 0x70
+	beq $t0, $t1, parse_velocity_mp
+	# see if this is an f
+	li $t1, 0x66
+	beq $t0, $t1, parse_velocity_mf
+
+	# otherwise this is an invalid velocity
+	j parse_velocity_unknown
+	
+parse_velocity_mp:
+	# make sure the next character is either a space or null
+	addi $a0, $a0, 1
+	lb $t0, 0($a0)
+
+	# if this is a space or null then
+	# the velocity is pianissimo
+	beq $t0, $zero, parse_velocity_mp_return
+	li $t1, 0x20
+	beq $t0, $t1, parse_velocity_mp_return
+
+	j parse_velocity_unknown
+
+parse_velocity_mp_return:	
+	add $a1, $a0, $zero
+	li $a0, 3
+	jr $ra
+
+parse_velocity_mf:
+	# make sure the next character is either a space or null
+	addi $a0, $a0, 1
+	lb $t0, 0($a0)
+
+	# if this is a space or null then
+	# the velocity is pianissimo
+	beq $t0, $zero, parse_velocity_mf_return
+	li $t1, 0x20
+	beq $t0, $t1, parse_velocity_mf_return
+
+parse_velocity_mf_return:	
+	add $a1, $a0, $zero
+	li $a0, 4
+	jr $ra
+
+parse_velocity_f:
+	# check the next character
+	addi $a0, $a0, 1
+	lb $t0, 0($a0)
+
+	# if this is a space or null then
+	# the velocity is fortissimo
+	beq $t0, $zero, parse_velocity_f_end
+	li $t1, 0x20
+	beq $t0, $t1, parse_velocity_f_end
+
+	# if this is a f then the velocity may be ff
+	li $t1, 0x66
+	beq $t0, $t1, parse_velocity_ff
+
+	# otherwise something was entered wrong
+	j parse_velocity_unknown
+
+parse_velocity_f_end:
+	add $a1, $a0, $zero
+	li $a0, 5
+	jr $ra
+
+parse_velocity_ff:
+	# make sure the next character is either a space or null
+	addi $a0, $a0, 1
+	lb $t0, 0($a0)
+
+	# if this is a space or null then
+	# the velocity is pianissimo
+	beq $t0, $zero, parse_velocity_ff_return
+	li $t1, 0x20
+	beq $t0, $t1, parse_velocity_ff_return
+
+	j parse_velocity_unknown
+
+parse_velocity_ff_return:	
+	add $a1, $a0, $zero
+	li $a0, 6
+	jr $ra
+
+parse_velocity_unknown:
+	add $a1, $a0, $zero
+	addi $a0, $zero, -1
+	jr $ra
+
+# takes in an ascii string
 # representing an int and
 # returns an integer. This method
 # will read the characters until either
@@ -276,6 +523,7 @@ parse_unknown:
 # input: $a0 ascii string
 # output: $a0 integer
 #         $a1 0 if no error
+#         $a2 last character processed (i.e. end of number string
 str_to_int:
 	add $t0, $zero, $a0 # save $a0
 
@@ -332,7 +580,8 @@ str_to_int_loop_end:
 	beq $t7, $zero, str_to_int_return
 	sub $a0, $zero, $a0
 
-str_to_int_return:	
+str_to_int_return:
+	add $a2, $zero, $t0
 	jr $ra
 	
 

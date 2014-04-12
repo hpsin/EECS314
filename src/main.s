@@ -78,6 +78,10 @@ finish_str_update:
 	li $t0, 0xA
 	bne $t2, $t0, read_command_loop
 
+	# erase the newline character
+	addi $t1, $t1, -1
+	sb $zero 0($t1)
+	
 	# parse the command
 	la $a0, input_string
 	jal parse_input
@@ -112,7 +116,7 @@ refresh_screen:
 	li $a0, 0xA
 	syscall
 
-	li $t0, 73
+	li $t0, 50
 	li $v0, 11
 	la $a0, 0xA
 blank_line_loop:
