@@ -77,7 +77,7 @@ play_note_arg3:
 	j play_note_exec
 play_note_arg3_max:
 	li $t0, 127
-	ble $a2, $t0, play_note_exec
+	ble $a3, $t0, play_note_exec
 
 	# clamp at 127
 	add $a3, $t0, $zero
@@ -87,8 +87,8 @@ play_note_exec:
 	add $t3, $a1, $zero
 
 	add $a1, $t1, $zero
-	add $a2, $a2, $zero
-	add $a3, $a3, $zero
+	add $a2, $t2, $zero
+	add $a3, $t3, $zero
 
 	li $v0, 33
 	syscall
