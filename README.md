@@ -37,6 +37,17 @@
 **TBD based on patch availability**
 
 
+## Velocity
+
+Valid velocities are:
+
+- `pp` pianissimo
+- `p` piano
+- `mp` mezzopiano
+- `mf` mezzoforte
+- `f` forte
+- `ff` fortissimo
+
 ## Midi stored internally as 6 byte sequences:
 
 ```
