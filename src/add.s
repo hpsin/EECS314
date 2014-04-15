@@ -67,8 +67,8 @@ add_rest:
 	.data
 add_note_msg:	.asciiz "Adding note\n[Press any key]"
 add_rest_msg:	.asciiz "Adding rest\n[Press any key]"
-MIDI_ON: .byte  6 	#  (hex) tttt cc ii nn vv 
-MIDI_OFF: .byte 6 	#   t: absolute time.
+MIDI_ON: .byte  5 	#  (hex) tt tt ci nn vv 
+MIDI_OFF: .byte 5 	#   t: absolute time.
 					#   c: Command (9 = on, 8=0ff)
 					#	i: note
 					#	v: velocity

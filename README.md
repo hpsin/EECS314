@@ -48,14 +48,14 @@ Valid velocities are:
 - `f` forte
 - `ff` fortissimo
 
-## Midi stored internally as 6 byte sequences:
+## Midi stored internally as 5 byte sequences:
 
 ```
-ss ss ii nn vv dd
+tt tt ci nn vv
 ```
 
-- `s` - start time
-- `ii` - instrument (channel, in reality)
+- `t` - start time (in ms)
+- `c` - MIDI Command (9 for on, 8 for off)
+- `i` - instrument (channel, in reality)
 - `n` - note
 - `v` - velocity
-- `d` - duration, in eight notes
