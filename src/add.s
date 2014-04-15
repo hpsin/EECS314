@@ -46,6 +46,11 @@ add_note:
 	sb $a1, MIDI_ON(4)
 	sb $a1, MIDI_OFF(4)
 	
+	# Call Diego's add to track.
+	mov $t3, $ra
+	#jal Diego's jank #add MIDI_ON and MIDI_OFF to track.
+	mov $ra, $t3	
+	
 	li $v0, 12
 	syscall
 
