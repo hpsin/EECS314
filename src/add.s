@@ -45,7 +45,7 @@ add_note:
 	
 	# Call Diego's add to track.
 	move $t3, $ra
-	#jal Diego's jank #add MIDI_ON and MIDI_OFF to track.
+	jal mem_add #add MIDI_ON and MIDI_OFF to track.
 	move $ra, $t3	
 	
 	li $v0, 12
