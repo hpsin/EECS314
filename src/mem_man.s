@@ -39,13 +39,13 @@ expand:
     bne $t1, $zero, skip_save_addr
     sw $v0, 0($t0)
 
-skip_save_addr:
-    # update the size of the array
-    la $t0, mem_size
-    lw $t1, 0($t0)
-    add $t1, $t0, $a0
-    sw $t1, 0($t0)
-    jr $ra
+    skip_save_addr:
+        # update the size of the array
+        la $t0, mem_size
+        lw $t1, 0($t0)
+        add $t1, $t0, $a0
+        sw $t1, 0($t0)
+        jr $ra
 
 addRecord:
     # search for the appropriate location to insert the new record
