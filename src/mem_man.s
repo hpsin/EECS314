@@ -78,7 +78,7 @@ addRecord:
 
 
     foundLocation:
-
+        # insert record in next slot
         sw $a0, 0($t4)
         sw $a1, 4($t4)
 
