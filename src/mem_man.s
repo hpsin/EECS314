@@ -9,16 +9,16 @@ mem_add:
     sw $ra, 0($sp)
 
     # load the record into a0 and a1
+    jal expand
     la $t0, MIDI_ON
     lw $a0, 0($t0)
     lw $a1, 4($t0)
-    jal expand
     jal addRecord
 
+    jal expand
     la $t0, MIDI_OFF
     lw $a0, 0($t0)
     lw $a1, 4($t0)
-    jal expand
     jal addRecord
 
     # pop the return address from the stack
