@@ -5,7 +5,7 @@ mem_size: .word 0    # store the size of the array
 
 mem_add:
     # push the return address to the stack
-    addi $sp, $zero, -4
+    addi $sp, $sp, -4
     sw $ra, 0($sp)
 
     # load the record into a0 and a1
@@ -23,7 +23,7 @@ mem_add:
 
     # pop the return address from the stack
     lw $ra, 0($sp)
-    addi $sp, $zero, 4
+    addi $sp, $sp, 4
 
     jr $ra
 
@@ -43,7 +43,7 @@ expand:
         # update the size of the array
         la $t0, mem_size
         lw $t1, 0($t0)
-        add $t1, $t0, $a0
+        add $t1, $t1, $a0
         sw $t1, 0($t0)
         jr $ra
 
@@ -51,6 +51,7 @@ addRecord:
     # search for the appropriate location to insert the new record
     la $t0, mem_loc
     la $t1, mem_size
+    lw $t0, 0($t0) # get the location of the array
     lw $t2, 0($t1) # get the size of the array
     addi $t2, $t2, -8 # the last record
     add $t1, $t0, $t2 # store the location of the last record in t1

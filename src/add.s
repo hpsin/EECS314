@@ -1,7 +1,7 @@
 #a0 note
 #a1 velocity
 #a2 duration
-#a3 instrument 
+#a3 instrument
 	.text
 	.globl add_note
 	.globl add_rest
@@ -15,24 +15,24 @@ add_note:
 	#load byte 2,3 store byte 2,3 of time in MIDI_ON bytes 0,
 	lw $t0, time
 	sw $t0, MIDI_ON
-	
+
 	move $t3, $ra
 	jal add_rest #increment time
 	move $ra, $t3
-	
+
 	lw $t0, time($zero)
 	sw $t0, MIDI_OFF($zero)
 	# store 0x90 (on) + ii in byte 4
 	li $t3, 4
-	li $t0, 0x90	
+	li $t0, 0x90
 	add $t0, $t0, $a3
 	sb $t0, MIDI_ON($t3)
-	
+
 	#Off signal
 	li $t0, 0x80
 	add $t0, $t0, $a3
 	sb $t0, MIDI_OFF($t3)
-	
+
 	li $t3, 5
 	# store note in byte 5
 	sb $t2, MIDI_ON($t3)
@@ -41,12 +41,21 @@ add_note:
 	li $t3, 6
 	sb $a1, MIDI_ON($t3)
 	sb $a1, MIDI_OFF($t3)
-	
+
+
+	# push the return address to the stack
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+
 	# Call Diego's add to track.
 	move $t3, $ra
 	jal mem_add #add MIDI_ON and MIDI_OFF to track.
-	move $ra, $t3	
-	
+	move $ra, $t3
+
+	# pop the return address from the stack
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
 	li $v0, 12
 	syscall
 
@@ -63,9 +72,9 @@ add_rest:
 
 	li $v0, 12
 	syscall
-	
+
 	jr $ra
-	
+
 	.data
 add_note_msg:	.asciiz "Adding note\n"
 add_rest_msg:	.asciiz "Adding rest\n[Press any key]"

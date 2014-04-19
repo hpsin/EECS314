@@ -1136,7 +1136,7 @@ help_msg: .asciiz "TODO: Implement help\n[Press any key]"# src/add.s
 #a0 note
 #a1 velocity
 #a2 duration
-#a3 instrument 
+#a3 instrument
 	.text
 	.globl add_note
 	.globl add_rest
@@ -1150,24 +1150,24 @@ add_note:
 	#load byte 2,3 store byte 2,3 of time in MIDI_ON bytes 0,
 	lw $t0, time
 	sw $t0, MIDI_ON
-	
+
 	move $t3, $ra
 	jal add_rest #increment time
 	move $ra, $t3
-	
+
 	lw $t0, time($zero)
 	sw $t0, MIDI_OFF($zero)
 	# store 0x90 (on) + ii in byte 4
 	li $t3, 4
-	li $t0, 0x90	
+	li $t0, 0x90
 	add $t0, $t0, $a3
 	sb $t0, MIDI_ON($t3)
-	
+
 	#Off signal
 	li $t0, 0x80
 	add $t0, $t0, $a3
 	sb $t0, MIDI_OFF($t3)
-	
+
 	li $t3, 5
 	# store note in byte 5
 	sb $t2, MIDI_ON($t3)
@@ -1176,11 +1176,20 @@ add_note:
 	li $t3, 6
 	sb $a1, MIDI_ON($t3)
 	sb $a1, MIDI_OFF($t3)
-	
+
+
+	# push the return address to the stack
+	addi $sp, $zero, -4
+	sw $ra, 0($sp)
+
 	# Call Diego's add to track.
 	move $t3, $ra
 	jal mem_add #add MIDI_ON and MIDI_OFF to track.
-	move $ra, $t3	
+	move $ra, $t3
+
+	# pop the return address from the stack
+	lw $ra, 0($sp)
+	addi $sp, $zero, 4
 	
 	li $v0, 12
 	syscall
@@ -1198,9 +1207,9 @@ add_rest:
 
 	li $v0, 12
 	syscall
-	
+
 	jr $ra
-	
+
 	.data
 add_note_msg:	.asciiz "Adding note\n"
 add_rest_msg:	.asciiz "Adding rest\n[Press any key]"
@@ -1210,7 +1219,7 @@ MIDI_OFF: .word 0, 0 	#   	t: absolute time.
 			#	i: note
 			#	v: velocity
 			#	x: undefined
-time: .word 0		#	Current time.  Should be set at time of save/load.  Is a word, but only first 2 bytes should be used
+time: .space 4		#	Current time.  Should be set at time of save/load.  Is a word, but only first 2 bytes should be used
 # src/mem_man.s
 
     .data
@@ -1220,25 +1229,25 @@ mem_size: .word 0    # store the size of the array
 
 mem_add:
     # push the return address to the stack
-    addi $sp, $zero, -4
+    addi $sp, $sp, -4
     sw $ra, 0($sp)
 
     # load the record into a0 and a1
+    jal expand
     la $t0, MIDI_ON
     lw $a0, 0($t0)
     lw $a1, 4($t0)
-    jal expand
     jal addRecord
 
+    jal expand
     la $t0, MIDI_OFF
     lw $a0, 0($t0)
     lw $a1, 4($t0)
-    jal expand
     jal addRecord
 
     # pop the return address from the stack
     lw $ra, 0($sp)
-    addi $sp, $zero, 4
+    addi $sp, $sp, 4
 
     jr $ra
 
@@ -1258,7 +1267,7 @@ expand:
         # update the size of the array
         la $t0, mem_size
         lw $t1, 0($t0)
-        add $t1, $t0, $a0
+        add $t1, $t1, $a0
         sw $t1, 0($t0)
         jr $ra
 
@@ -1266,6 +1275,7 @@ addRecord:
     # search for the appropriate location to insert the new record
     la $t0, mem_loc
     la $t1, mem_size
+    lw $t0, 0($t0) # get the location of the array
     lw $t2, 0($t1) # get the size of the array
     addi $t2, $t2, -8 # the last record
     add $t1, $t0, $t2 # store the location of the last record in t1
