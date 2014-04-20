@@ -84,3 +84,101 @@ addRecord:
         sw $a1, 4($t4)
 
         jr $ra
+
+
+# This method will move the notes into the file_buffer in proper MIDI format
+mem_master_dump:
+
+
+    jr $ra
+
+
+# This method will create an array of notes that contain the duration of each note
+# rather than the start/stop times
+# The address of the array will be stored in $v0
+mem_master:
+    lw $t0, mem_size($0)
+
+    # divide mem_size by 2 and allocate that amount
+    sll $t0, $t0, 1
+    addi $v0, $zero, 9 # sbrk syscall
+    add $a0, $zero, $t0
+    syscall
+
+    addi $sp, $sp, -4 # push frame onto stack
+    sw $s0, 0($sp) # push s0 onto stack
+    add $s0, $zero, $v0 # store array address in s0
+
+    # just in case the temps get overwritten by the syscall
+    lw $t1, mem_loc($0)
+    lw $t0, mem_size($0)
+
+
+    # this is a little janky, but it makes my life easier
+    addi $t1, $t1, -8 # move to one event worth before the start of the array
+
+    note_loop:
+
+        addi $t1, $t1, 8 # move to next event
+
+
+        lw $a0, 0($t1) # load start time into a0
+        lbu $a1, 4($t1) # load command byte into a1
+
+        srl $a1, $a1, 4 # shift the instrument bits out of the command
+
+        addi $t2, $zero, 9 # note_on command
+        beq $a1, $t2, note_on
+
+        # get the location of the last event
+        add $t3, $t1, $t0
+        addi $t3, $t3, -8
+
+        # if we haven't reached the last event, loop
+        bne $t3, $t1, note_loop
+
+        lw $s0, 0($sp) # pop s0 from stack
+        addi $sp, $sp, 4 # pop frame from stack
+
+        jr $ra
+
+        note_on:
+
+            # store the event address in t4
+            add $t4, $zero, $t1
+
+            # load the note byte into a2
+            lbu $a2, 5($t4)
+
+            find_off:
+                addi $t4, $t4, 8 # move to the next event
+
+                lbu $a3, 5($t4) # load note byte into a3
+
+                beq $a3, $a2, found_off
+
+                j find_off
+
+            found_off:
+                lw $t5, 0($t4) # load note off time into t5
+                lw $t6, 4($t4) # load other event info into t6
+                sub $t5, $t5, $a0 # find difference between note_on and note_off
+
+                sw $t5, 0($s0) # store delta in array
+                sw $t6, 4($s0) # store other event info in array
+                addi $s0, $s0, 8 # move array pointer to next index
+
+                j note_loop
+
+
+# This method will deallocate the array created by mem_master
+# *** This method must be called after mem_master and before another mem_add ***
+mem_master_dealloc:
+    lw $t0, mem_size($0)
+    sll $t0, $t0, 1
+
+    addi $v0, $zero, 9 # sbrk syscall
+    sub $a0, $zero, $t0 # invert the array size to indicate deallocate
+    syscall
+
+    jr $ra
