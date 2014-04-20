@@ -87,7 +87,48 @@ addRecord:
 
 
 # This method will move the notes into the file_buffer in proper MIDI format
+# The length of the track will be stored in track_length when this method returns
 mem_master_dump:
+    # load array size and address into registers
+    lw $t0, mem_size($0)
+    lw $t1, mem_loc($0)
+
+    # get the buffer's address
+    la $a0, file_buffer
+
+    # a1 will store the previous event's time
+    add $a1, $zero, $zero # initialize to 0
+
+    add $a2, $t0, $t1 # store the last address in the array
+
+    # divide array size by 8 to get number of events
+    srl $a3, $t0, 3
+    addi $t2, $zero, 6
+    mul $a3, $a3, $t2 # multiply by 6 to get number of MIDI bytes
+    sw $a3, track_length($0) # store MIDI bytes in track length
+
+    store_midi_loop:
+
+        lw $t2, 0($t1) # load event time into t2
+        lw $t3, 4($t1) # load event data into t3
+
+        # convert to delta time
+        sub $t2, $t2, $a1
+        add $a1, $zero, $t2 # set previous event time to this event's time
+
+        sh $t2, 0($a0) # store event time
+        sw $t3, 2($a0) # store event data
+
+        # NOTE: even though we store 8 bytes, we advance 6
+        # because the 2 least significant bytes are empty and not used in MIDI
+        addi $a0, $a0, 6 # move to next event slot in buffer
+
+        addi $t1, $t1, 8 # move to next event in array
+
+
+        # while current address is less than last address
+        bne $t1, $a2, store_midi_loop
+
 
 
     jr $ra
