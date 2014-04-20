@@ -4,7 +4,7 @@
                                   |\
              __  __ __  __ ____   | |
             |  \/  |  \/  |  _ \  |/
-            | |\/| | |\/| | |_) |/|_ 
+            | |\/| | |\/| | |_) |/|_
             | |  | | |  | |  __///| \
             |_|  |_|_|  |_|_|  | \|_ |
 			                    \_|_/
@@ -48,10 +48,10 @@ Valid velocities are:
 - `f` forte
 - `ff` fortissimo
 
-## Midi stored internally as 5 byte sequences:
+## Midi stored internally as 8 byte sequences:
 
 ```
-tt tt ci nn vv
+tt tt tt tt ci nn vv xx
 ```
 
 - `t` - start time (in ms)
@@ -59,3 +59,4 @@ tt tt ci nn vv
 - `i` - instrument (channel, in reality)
 - `n` - note
 - `v` - velocity
+- `x` - unused
