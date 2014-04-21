@@ -127,9 +127,6 @@ play_song:
 
 	exit:
 
-	#deallocates the array from mem_master
-	jal mem_master_dealloc
-
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 	jr $ra

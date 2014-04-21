@@ -210,17 +210,3 @@ mem_master:
                 addi $s0, $s0, 8 # move array pointer to next index
 
                 j note_loop
-
-
-# This method will deallocate the array created by mem_master
-# *** This method must be called after mem_master and before another mem_add ***
-###### THIS DOES NOT WORK!!! sbrk does not accept negative numbers to dealloc ####
-mem_master_dealloc:
-    lw $t0, mem_size($0)
-    srl $t0, $t0, 1
-
-    addi $v0, $zero, 9 # sbrk syscall
-    sub $a0, $zero, $t0 # invert the array size to indicate deallocate
-    syscall
-
-    jr $ra
