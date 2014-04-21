@@ -105,7 +105,7 @@ load_file:
 	la $s0, error_read_msg
 	blt  $v0, $zero, errorMsg
 
-	sb $zero, buffer($v0) #null terminates the fiie
+	sb $zero, file_buffer($v0) #null terminates the fiie
 
 	#print buffer for testing
 	li $v0, 4
