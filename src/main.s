@@ -46,17 +46,17 @@ read_command_loop:
 
 # if a backspace was entered remove the last character
 remove_char:
-	addi $t1, $t1, -1 # 
+	addi $t1, $t1, -1 #
 	sb $zero, ($t1)
 	j finish_str_update
-	
-append_char:	
-	
+
+append_char:
+
 	sb $t2, ($t1)
 	addi $t1, $t1, 1
 	sb $zero, ($t1) # terminate the string
 
-finish_str_update:	
+finish_str_update:
 	# stick the resturn address on the stack
 	addi $sp, $sp, -12
 	sw $ra, -8($sp)
@@ -81,11 +81,11 @@ finish_str_update:
 	# erase the newline character
 	addi $t1, $t1, -1
 	sb $zero 0($t1)
-	
+
 	# parse the command
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
-	
+
 	la $a0, input_string
 	jal parse_input
 
@@ -98,7 +98,7 @@ finish_str_update:
 
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
-	
+
 	li $t0, 1
 	beq $a0, $t0, call_play_song
 	li $t0, 2
@@ -125,7 +125,7 @@ call_play_note:
 	add $a0, $zero, $a1
 	add $a1, $zero, $a2
 	add $a2, $zero, $a3
-	lw $a3, a4	
+	lw $a3, a4
 	jal play_note
 	j command_finished
 
@@ -133,12 +133,12 @@ call_add_rest:
 	add $a0, $zero, $a1
 	jal add_rest
 	j command_finished
-	
+
 call_add_note:
 	add $a0, $zero, $a1
 	add $a1, $zero, $a2
 	add $a2, $zero, $a3
-	lw $a3, a4	
+	lw $a3, a4
 	jal add_note
 	j command_finished
 
@@ -168,17 +168,17 @@ call_unknown:
 	li $v0, 12
 	syscall
 	j command_finished
-	
+
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 
 	jal play_note
 
-command_finished:	
-	
+command_finished:
+
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
-	
+
 	j read_command
 	jr $ra
 	nop
@@ -209,14 +209,14 @@ refresh_screen:
 	li $a0, 0xA
 	syscall
 
-	li $t0, 50
+	li $t0, 30
 	li $v0, 11
 	la $a0, 0xA
 blank_line_loop:
 	syscall # print a blank line
 	addi $t0, $t0, -1
 	bne $t0, $zero, blank_line_loop
-	
+
 	jr $ra
 
 .data
