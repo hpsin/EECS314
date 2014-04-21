@@ -48,10 +48,7 @@ add_note:
 	sw $ra, 0($sp)
 
 	# Call Diego's add to track.
-	move $t3, $ra
 	jal mem_add #add MIDI_ON and MIDI_OFF to track.
-	move $ra, $t3
-
 	# pop the return address from the stack
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
