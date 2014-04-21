@@ -79,6 +79,9 @@ addRecord:
 
 
     foundLocation:
+        #shift left one byte
+        sll $a1, $a1, 8
+
         # insert record in next slot
         sw $a0, 0($t4)
         sw $a1, 4($t4)
@@ -141,7 +144,7 @@ mem_master:
     lw $t0, mem_size($0)
 
     # divide mem_size by 2 and allocate that amount
-    sll $t0, $t0, 1
+    srl $t0, $t0, 1
     addi $v0, $zero, 9 # sbrk syscall
     add $a0, $zero, $t0
     syscall
@@ -216,7 +219,7 @@ mem_master:
 # *** This method must be called after mem_master and before another mem_add ***
 mem_master_dealloc:
     lw $t0, mem_size($0)
-    sll $t0, $t0, 1
+    srl $t0, $t0, 1
 
     addi $v0, $zero, 9 # sbrk syscall
     sub $a0, $zero, $t0 # invert the array size to indicate deallocate
