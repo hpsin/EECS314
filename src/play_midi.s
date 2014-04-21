@@ -96,10 +96,7 @@ play_note_exec:
 
 
 play_song:
-	li $v0, 4
-	la $a0, play_song_msg
-	syscall
-	
+
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal mem_master
@@ -127,6 +124,8 @@ play_song:
 		addi $t1, $t1, -1
 		
 		j play_list_of_notes		
+	
+	exit:
 	
 	#deallocates the array from mem_master
 	jal mem_master_dealloc	
