@@ -99,10 +99,40 @@ play_song:
 	li $v0, 4
 	la $a0, play_song_msg
 	syscall
-
-	li $v0, 12
-	syscall
 	
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	jal mem_master
+	
+	add $t0, $v0, $0
+	
+	lw $t1, mem_size($0)
+		
+	sra $t1, $t1, 1 # gets the array size
+	
+	play_list_of_notes:
+		
+	beq $t1, $0, exit
+		lw $a1, 0($t1) # t4 now contains the first 4 bytes
+		lb $a0, 5($t1) # a0 now contains the sixith byte (note)
+		lb $a2, 4($t1) 
+		andi $a2, $a2, 0x0F # a2 is now the instrument
+		lb $a3, 6($t1) # a3 is the velocity
+
+		addi $t0, $t0, 8 # sets t0 to the next note
+		
+		li $v0, 33
+		syscall
+		
+		addi $t1, $t1, -1
+		
+		j play_list_of_notes		
+	
+	#deallocates the array from mem_master
+	jal mem_master_dealloc	
+	
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
 	jr $ra
 
 	.data
