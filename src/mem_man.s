@@ -79,9 +79,6 @@ addRecord:
 
 
     foundLocation:
-        #shift left one byte
-        sll $a1, $a1, 8
-
         # insert record in next slot
         sw $a0, 0($t4)
         sw $a1, 4($t4)
@@ -157,6 +154,9 @@ mem_master:
     lw $t1, mem_loc($0)
     lw $t0, mem_size($0)
 
+    # get the location of the last event
+    add $t3, $t1, $t0
+    addi $t3, $t3, -8
 
     # this is a little janky, but it makes my life easier
     addi $t1, $t1, -8 # move to one event worth before the start of the array
@@ -174,9 +174,6 @@ mem_master:
         addi $t2, $zero, 9 # note_on command
         beq $a1, $t2, note_on
 
-        # get the location of the last event
-        add $t3, $t1, $t0
-        addi $t3, $t3, -8
 
         # if we haven't reached the last event, loop
         bne $t3, $t1, note_loop
@@ -217,6 +214,7 @@ mem_master:
 
 # This method will deallocate the array created by mem_master
 # *** This method must be called after mem_master and before another mem_add ***
+###### THIS DOES NOT WORK!!! sbrk does not accept negative numbers to dealloc ####
 mem_master_dealloc:
     lw $t0, mem_size($0)
     srl $t0, $t0, 1

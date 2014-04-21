@@ -972,7 +972,7 @@ filename: .space 256
 #	$a1 volume (0-127)
 #	$a2 duration in seconds
 #	$a3 instrument (0-127)
-play_note:	
+play_note:
 	bge $a0, $zero, play_note_arg0_max
 
 	# clamp at zero
@@ -984,7 +984,7 @@ play_note_arg0_max:
 
 	# clamp at 127
 	add $a0, $t0, $zero
-	
+
 play_note_arg1:
 	li $t0, 1
 	beq $a1, $t0, play_note_pp
@@ -997,15 +997,15 @@ play_note_arg1:
 	li $t0, 5
 	beq $a1, $t0, play_note_f
 	j play_note_ff
-	
+
 play_note_pp:
 	li $a1, 10
 	j play_note_arg2
-	
+
 play_note_p:
 	li $a1, 32
 	j play_note_arg2
-	
+
 play_note_mp:
 	li $a1, 52
 	j play_note_arg2
@@ -1020,7 +1020,7 @@ play_note_f:
 
 play_note_ff:
 	li $a1, 127
-	
+
 play_note_arg2:
 	bgt $a2, $zero, play_note_arg2_milli
 
@@ -1028,7 +1028,7 @@ play_note_arg2:
 	li $a2, 1000
 	j play_note_arg2
 
-play_note_arg2_milli:	
+play_note_arg2_milli:
 	li $t0, 1000
 	mult $a2, $t0
 	mflo $a2
@@ -1061,13 +1061,42 @@ play_note_exec:
 
 
 play_song:
-	li $v0, 4
-	la $a0, play_song_msg
-	syscall
 
-	li $v0, 12
-	syscall
-	
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	jal mem_master
+
+	add $t0, $v0, $0
+
+	lw $t1, mem_size($0)
+
+	sra $t1, $t1, 1 # gets the array size
+
+	play_list_of_notes:
+
+	beq $t1, $0, exit
+		lw $a1, 0($t0) # a1 now contains the first 4 bytes
+		lb $a0, 5($t0) # a0 now contains the sixith byte (note)
+		lb $a2, 4($t0)
+		andi $a2, $a2, 0x0F # a2 is now the instrument
+		lb $a3, 6($t0) # a3 is the velocity
+
+		addi $t0, $t0, 8 # sets t0 to the next note
+
+		li $v0, 33
+		syscall
+
+		addi $t1, $t1, -8
+
+		j play_list_of_notes
+
+	exit:
+
+	#deallocates the array from mem_master
+	jal mem_master_dealloc
+
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
 	jr $ra
 
 	.data
@@ -1284,10 +1313,7 @@ add_note:
 	sw $ra, 0($sp)
 
 	# Call Diego's add to track.
-	move $t3, $ra
 	jal mem_add #add MIDI_ON and MIDI_OFF to track.
-	move $ra, $t3
-
 	# pop the return address from the stack
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
@@ -1466,7 +1492,7 @@ mem_master:
     lw $t0, mem_size($0)
 
     # divide mem_size by 2 and allocate that amount
-    sll $t0, $t0, 1
+    srl $t0, $t0, 1
     addi $v0, $zero, 9 # sbrk syscall
     add $a0, $zero, $t0
     syscall
@@ -1479,6 +1505,9 @@ mem_master:
     lw $t1, mem_loc($0)
     lw $t0, mem_size($0)
 
+    # get the location of the last event
+    add $t3, $t1, $t0
+    addi $t3, $t3, -8
 
     # this is a little janky, but it makes my life easier
     addi $t1, $t1, -8 # move to one event worth before the start of the array
@@ -1496,9 +1525,6 @@ mem_master:
         addi $t2, $zero, 9 # note_on command
         beq $a1, $t2, note_on
 
-        # get the location of the last event
-        add $t3, $t1, $t0
-        addi $t3, $t3, -8
 
         # if we haven't reached the last event, loop
         bne $t3, $t1, note_loop
@@ -1539,9 +1565,10 @@ mem_master:
 
 # This method will deallocate the array created by mem_master
 # *** This method must be called after mem_master and before another mem_add ***
+###### THIS DOES NOT WORK!!! sbrk does not accept negative numbers to dealloc ####
 mem_master_dealloc:
     lw $t0, mem_size($0)
-    sll $t0, $t0, 1
+    srl $t0, $t0, 1
 
     addi $v0, $zero, 9 # sbrk syscall
     sub $a0, $zero, $t0 # invert the array size to indicate deallocate
