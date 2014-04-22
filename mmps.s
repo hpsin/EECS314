@@ -1063,15 +1063,19 @@ play_note_exec:
 
 play_song:
 
+	lw $t1, mem_size($0)
+
+	beq $t1, $0, empty_song
+
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	jal mem_master
 
 	add $t0, $v0, $0
 
-	lw $t1, mem_size($0)
 
-	sra $t1, $t1, 1 # gets the array size
+	lw $t1, mem_size($0)
+	srl $t1, $t1, 1 # gets the array size
 
 	play_list_of_notes:
 
@@ -1095,6 +1099,8 @@ play_song:
 
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
+
+	empty_song:
 	jr $ra
 
 	.data
