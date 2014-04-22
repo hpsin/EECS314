@@ -2,13 +2,13 @@
 file_buffer:	.space 100000 #MIDI file to read will not exceed 100K for complex files
 midi_header: .byte 0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00, 0xDD
 track_header: .byte 0x4D, 0x54, 0x72, 0x6b
-save_file_msg: .asciiz "bullshit"
 error_read_msg: .asciiz "ERROR reading file"
 error_open_msg: .asciiz "ERROR opening file"
 error_write_midi_header_msg: .asciiz "ERROR writing the midi header"
 error_write_track_header_msg: .asciiz "ERROR writing the track header"
 error_write_track_length_msg: .asciiz "ERROR writing the track length"
 error_write_file_msg: .asciiz "ERROR writing to the file"
+error_no_file: .asciiz "ERROR no notes to save to file"
 track_length: .space 4
 
 	.text
@@ -20,8 +20,14 @@ save_file:
     addi $sp, $sp, -4
     sw $ra, 0($sp)
 
- # call diegos function to get fileBuffer and track_length
+#Check if the array is 0 before trying to save the file 
+ 	lw $t0, mem_size($0)
+ 	la $s0, error_no_file
+	beq  $t0, $zero, errorMsg
+
+# call diegos function to get fileBuffer and track_length
  	jal mem_master_dump
+ 	
 
  # pop the return address from the stack
     lw $ra, 0($sp)
@@ -79,6 +85,11 @@ save_file:
 	#error check for writing the file
 	la $s0, error_write_file_msg
 	blt  $v0, $zero, errorMsg
+
+	# Close the file 
+  	li   $v0, 16       # system call for close file
+  	move $a0, $s6      # file descriptor to close
+  	syscall            # close file
 	
 	jr $ra
 
