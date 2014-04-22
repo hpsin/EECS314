@@ -64,14 +64,11 @@ add_rest:
 	add $t0, $t0, $a2		# time += duration
 	sw $t0, time($zero)
 
-	li $v0, 12
-	syscall
-
 	jr $ra
 
 	.data
 add_note_msg:	.asciiz "Adding note\n"
-add_rest_msg:	.asciiz "Adding rest\n[Press any key]"
+add_rest_msg:	.asciiz "Adding rest\n"
 MIDI_ON: .word  0, 0 	#  (hex) tt tt tt tt ci nn vv xx
 MIDI_OFF: .word 0, 0 	#   	t: absolute time.
 			#   	c: Command (9 = on, 8=0ff)
