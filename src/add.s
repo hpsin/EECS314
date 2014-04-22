@@ -7,6 +7,14 @@
 	.globl add_rest
 
 add_note:
+    	li $t0, 15
+        bgt $a3, $t0, add_note_bad_instrument
+
+        # convert the instrument to a valid one
+        li $t0, 8
+        mult $a3, $t0
+        mflo $a3
+    
 	move $t2, $a0
 	li $v0, 4
 	la $a0, add_note_msg
@@ -53,10 +61,14 @@ add_note:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 
-	li $v0, 12
-	syscall
-
 	jr $ra
+
+add_note_bad_instrument:
+        li $v0, 4
+        la $a0, add_note_bad_instrument_msg
+        syscall
+
+        jr $ra
 
 add_rest:
 	li $v0, 4
@@ -67,14 +79,12 @@ add_rest:
 	add $t0, $t0, $a2		# time += duration
 	sw $t0, time($zero)
 
-	li $v0, 12
-	syscall
-
 	jr $ra
 
 	.data
 add_note_msg:	.asciiz "Adding note\n"
-add_rest_msg:	.asciiz "Adding rest\n[Press any key]"
+add_note_bad_instrument_msg:	 .asciiz "Invalid instrument. Enter a number between 0 and 15 (inclusive)\n"
+add_rest_msg:	.asciiz "Adding rest\n"
 MIDI_ON: .word  0, 0 	#  (hex) tt tt tt tt ci nn vv xx
 MIDI_OFF: .word 0, 0 	#   	t: absolute time.
 			#   	c: Command (9 = on, 8=0ff)
