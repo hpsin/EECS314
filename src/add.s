@@ -53,9 +53,6 @@ add_note:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 
-	li $v0, 12
-	syscall
-
 	jr $ra
 
 add_rest:
