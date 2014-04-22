@@ -76,14 +76,17 @@ play_note_arg3:
 	add $a3, $zero, $zero
 	j play_note_exec
 play_note_arg3_max:
-	li $t0, 127
+	li $t0, 15
 	ble $a3, $t0, play_note_exec
 
 	# clamp at 127
 	add $a3, $t0, $zero
 play_note_exec:
 	add $t1, $a2, $zero
-	add $t2, $a3, $zero
+        # scale the instrument
+        li $t2, 8
+        mult $a3, $t2
+        mflo $t2 
 	add $t3, $a1, $zero
 
 	add $a1, $t1, $zero
