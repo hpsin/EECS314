@@ -9,11 +9,6 @@
 add_note:
     	li $t0, 15
         bgt $a3, $t0, add_note_bad_instrument
-
-        # convert the instrument to a valid one
-        li $t0, 8
-        mult $a3, $t0
-        mflo $a3
     
 	move $t2, $a0
 	li $v0, 4
@@ -74,7 +69,10 @@ add_rest:
 	li $v0, 4
 	la $a0, add_rest_msg
 	syscall
-
+	
+	ble $a2, 127, good_time
+	li $a2, 127 #max duration is 127.
+	good_time:
 	lw $t0, time($zero)
 	add $t0, $t0, $a2		# time += duration
 	sw $t0, time($zero)

@@ -127,7 +127,8 @@ mem_master_dump:
     srl $a3, $t0, 3 # divide array size by 8 to get number of events
     addi $t2, $zero, 6
     mul $a3, $a3, $t2 # multiply by 6 to get number of MIDI bytes
-    sw $a3, track_length($0) # store MIDI bytes in track length
+    la $t7, track_length
+    sw $a3, 0($t7) # store MIDI bytes in track length
 
     store_midi_loop:
 

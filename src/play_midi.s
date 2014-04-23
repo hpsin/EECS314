@@ -94,14 +94,21 @@ play_song:
 	beq $t1, $0, exit
                 # convert this to a valid midi volume
     	        lb $a1, 6($t0)
-                addi $sp, $sp, -4
-                sw $ra, 0($sp)
+                addi $sp, $sp, -8
+                sw $ra, 4($sp)
+                sw $t0, 0($sp)
                 jal map_dynamics_to_volume
-                lw $ra, 0($sp)
-                addi $sp, $sp, 4
+                lw $t0, 0($sp)
+                lw $ra, 4($sp)
+                addi $sp, $sp, 8
                 add $a3, $a1, $zero
+
+                # convert to milliseconds
+		lb $a1, 0($t0) # a1 now contains the first 4 bytes
+                li $t2, 1000
+                mult $a1, $t2
+                mflo $a1
     
-		lw $a1, 0($t0) # a1 now contains the first 4 bytes
 		lb $a0, 5($t0) # a0 now contains the sixith byte (note)
 		lb $a2, 4($t0)
 		andi $a2, $a2, 0x0F # a2 is now the instrument
