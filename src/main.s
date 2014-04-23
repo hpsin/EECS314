@@ -5,6 +5,9 @@ main:
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 
+	la $t0, input_history
+	sw $t0, input_history_start
+
 	li $v0, 4
 	la $a0, splash_screen
 	syscall
@@ -194,12 +197,38 @@ refresh_screen:
 	la $a0, clear_screen
 	syscall
 
+	# print the input history
+	#########################
+
+	# check and see where circular buffer pointer is
+	la $t0, input_history_start
+	lw $t1, 0($t0)
+	la $t0, input_history
+
+
+	beq $t0, $t1, print_input_history_aligned
+
+	li $v0, 4
+	la $a0, input_history_start
+	syscall
+
+	li $v0, 4
+	la $a0, input_history
+	syscall
+	j print_input_history_end
+	
+print_input_history_aligned:
+	li $v0, 4
+	la $a0, input_history
+	syscall
+	
+print_input_history_end:
 	# print the $ sign
 	li $v0, 4
 	la $a0, input_prompt
 	syscall
 
-	# print what has been typed
+	# print current command
 	li $v0, 4
 	add $a0, $t2, $zero
 	syscall
@@ -209,16 +238,14 @@ refresh_screen:
 	li $a0, 0xA
 	syscall
 
-	li $t0, 30
 	li $v0, 11
 	la $a0, 0xA
-blank_line_loop:
 	syscall # print a blank line
-	addi $t0, $t0, -1
-	bne $t0, $zero, blank_line_loop
 
 	jr $ra
 
 .data
 input_string: .space 100 # 99 char string
+input_history: .space 10000 # 9999 char string
+input_history_start: .word 0
 error_message: .asciiz "ERROR: Unknown or malformed command\n [Press Enter]"
