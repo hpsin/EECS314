@@ -78,7 +78,7 @@ addRecord:
     beq $t2, $0, insert_note # if no notes, insert at beginning
 
     add $t3, $t0, $t2 # add number of notes to start location
-    addi $t3, $t3, -8 # move back one note 
+    addi $t3, $t3, -8 # move back one note
 
     insert_note:
     sw $a0, 0($t3) # insert record in next slot
@@ -126,13 +126,6 @@ mem_master_dump:
 
     add $a2, $t0, $t1 # store the last address in the array
 
-
-    srl $a3, $t0, 3 # divide array size by 8 to get number of events
-    addi $t2, $zero, 6
-    mul $a3, $a3, $t2 # multiply by 6 to get number of MIDI bytes
-    la $t7, track_length
-    sw $a3, 0($t7) # store MIDI bytes in track length
-
     store_midi_loop:
 
         lw $t2, 0($t1) # load event time into t2
@@ -142,12 +135,26 @@ mem_master_dump:
         sub $t2, $t2, $a1
         add $a1, $zero, $t2 # set previous event time to this event's time
 
-        sh $t2, 0($a0) # store event time
+
+        addi $sp, $sp, -4 # push frame onto stack
+        sw $ra, 0($sp) # push return address onto stack
+        sw $a0, 4($sp) # push a0 onto stack
+
+        add $a0, $t2, $0 # assign a0 with the event time
+        jal mem_seven_bit # convert event time to 7 bit
+
+
+        add $t2, $v0, $0 # assign t2 with the new event time
+
+        lw $a0, 4($sp) # pop a0 from stack
+        lw $ra, 0($sp) # pop return address from stack
+        addi $sp, $sp, 4 # pop frame from stack
+
+
+        sw $t2, 0($a0) # store event time
         sw $t3, 2($a0) # store event data
 
-        # NOTE: even though we store 8 bytes, we advance 6
-        # because the 2 least significant bytes are empty and not used in MIDI
-        addi $a0, $a0, 6 # move to next event slot in buffer
+        addi $a0, $a0, 8 # move to next event slot in buffer
 
         addi $t1, $t1, 8 # move to next event in array
 
@@ -159,6 +166,52 @@ mem_master_dump:
 
     jr $ra
 
+# this function will turn the word in a0 into a 7 bit word in v0
+mem_seven_bit:
+    # convert msb to 7 bit
+    sll $t0, $a0, 3
+    ori $t0, $t0, 0x80000000
+    andi $t0, $t0, 0xFF000000
+
+    # convert 2nd byte to 7 bit
+    sll $t1, $a0, 2
+    ori $t1, $t1, 0x00800000
+    andi $t1, $t1, 0x00FF0000
+
+    # convert 3rd byte to 7 bit
+    sll $t2, $a0, 1
+    ori $t2, $t2, 0x00008000
+    andi $t2, $t2, 0x0000FF00
+
+    # convert lsb to 7 bit
+    andi $t3, $a0, 0x000000EF
+
+    add $v0, $0, $0 # clear v0
+    or $v0, $v0, $t0
+    or $v0, $v0, $t1
+    or $v0, $v0, $t2
+    or $v0, $v0, $t3
+
+    jr $ra
+
+# this function will turn the 7 bit word in a0 into a 8 bit word in v0
+mem_eight_bit:
+    andi $t0, $a0, 0xEF
+    andi $t1, $a0, 0xEF00
+    srl $t1, $t1, 1
+    add $t0, $t0, $t1
+
+    andi $t1, $a0, 0xEF0000
+    srl $t1, $t1, 2
+    add $t0, $t0, $t1
+
+    andi $t1, $a0, 0xEF000000
+    srl $t1, $t1, 3
+    add $t0, $t0, $t1
+
+    add $v0, $t0, $0
+
+    jr $ra
 
 # This method will create an array of notes that contain the duration of each note
 # rather than the start/stop times
