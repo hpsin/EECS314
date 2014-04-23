@@ -73,56 +73,61 @@ addRecord:
     la $t1, mem_size
     lw $t0, 0($t0) # get the location of the array
     lw $t2, 0($t1) # get the size of the array
-    addi $t2, $t2, -8 # the last record
-    add $t1, $t0, $t2 # store the location of the last record in t1
 
-    add $t4, $t1, $zero # t4 points to the location to store the record
-    beq $t2, $zero, foundLocation # if this is the first record we are inserting
+    add $t3, $t0, $0 # location of first note
+    beq $t2, $0, insert_note # if no notes, insert at beginning
 
-    findLocation:
-        addi $t1, $t1, -8 # go back one record
-        # load the current record in t3 & t4
-        lw $t3, 0($t1)
-        lw $t4, 4($t1)
+    add $t3, $t0, $t2 # add number of notes to start location
+    addi $t3, $t3, -8 # move back one note 
 
-        add $t4, $t1, 8 # t4 points to the location to store the record
+    insert_note:
+    sw $a0, 0($t3) # insert record in next slot
+    sw $a1, 4($t3)
 
-        # if time_new_record > time_current_record
-        bgt $a0, $t3, foundLocation
+    jr $ra
 
 
-        # store the current record in the next slot
-        sw $t3, 0($t4)
-        sw $t4, 4($t4)
+    # findLocation:
+    #     addi $t1, $t1, -8 # go back one record
+    #     # load the current record in t3 & t5
+    #     lw $t3, 0($t1)
+    #     lw $t5, 4($t1)
+    #
+    #     add $t4, $t1, 8 # t4 points to the location to store the record
+    #
+    #     # if time_new_record > time_current_record
+    #     bgt $a0, $t3, foundLocation
+    #
+    #
+    #     # store the current record in the next slot
+    #     sw $t3, 0($t4)
+    #     sw $t5, 4($t4)
+    #
+    #     j findLocation
+    #
+    #
 
-        j findLocation
-
-
-    foundLocation:
-        # insert record in next slot
-        sw $a0, 0($t4)
-        sw $a1, 4($t4)
-
-        jr $ra
 
 
 # This method will move the notes into the file_buffer in proper MIDI format
 # The length of the track will be stored in track_length when this method returns
 mem_master_dump:
     # load array size and address into registers
-    lw $t0, mem_size($0)
-    lw $t1, mem_loc($0)
+    la $t0, mem_size
+    lw $t0, 0($t0) # get array size
+    la $t1, mem_loc
+    lw $t1, 0($t1) # get array address
 
-    # get the buffer's address
-    la $a0, file_buffer
+
+    la $a0, file_buffer # get the buffer's address
 
     # a1 will store the previous event's time
     add $a1, $zero, $zero # initialize to 0
 
     add $a2, $t0, $t1 # store the last address in the array
 
-    # divide array size by 8 to get number of events
-    srl $a3, $t0, 3
+
+    srl $a3, $t0, 3 # divide array size by 8 to get number of events
     addi $t2, $zero, 6
     mul $a3, $a3, $t2 # multiply by 6 to get number of MIDI bytes
     la $t7, track_length
