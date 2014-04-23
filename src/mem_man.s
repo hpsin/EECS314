@@ -110,19 +110,21 @@ addRecord:
 # The length of the track will be stored in track_length when this method returns
 mem_master_dump:
     # load array size and address into registers
-    lw $t0, mem_size($0)
-    lw $t1, mem_loc($0)
+    la $t0, mem_size
+    lw $t0, 0($t0) # get array size
+    la $t1, mem_loc
+    lw $t1, 0($t1) # get array address
 
-    # get the buffer's address
-    la $a0, file_buffer
+
+    la $a0, file_buffer # get the buffer's address
 
     # a1 will store the previous event's time
     add $a1, $zero, $zero # initialize to 0
 
     add $a2, $t0, $t1 # store the last address in the array
 
-    # divide array size by 8 to get number of events
-    srl $a3, $t0, 3
+
+    srl $a3, $t0, 3 # divide array size by 8 to get number of events
     addi $t2, $zero, 6
     mul $a3, $a3, $t2 # multiply by 6 to get number of MIDI bytes
     sw $a3, track_length($0) # store MIDI bytes in track length
