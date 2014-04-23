@@ -69,7 +69,10 @@ add_rest:
 	li $v0, 4
 	la $a0, add_rest_msg
 	syscall
-
+	
+	ble $a2, 127, good_time
+	li $a2, 127 #max duration is 127.
+	good_time:
 	lw $t0, time($zero)
 	add $t0, $t0, $a2		# time += duration
 	sw $t0, time($zero)
