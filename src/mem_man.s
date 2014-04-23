@@ -73,37 +73,40 @@ addRecord:
     la $t1, mem_size
     lw $t0, 0($t0) # get the location of the array
     lw $t2, 0($t1) # get the size of the array
-    addi $t2, $t2, -8 # the last record
-    add $t1, $t0, $t2 # store the location of the last record in t1
 
-    add $t4, $t1, $zero # t4 points to the location to store the record
-    beq $t2, $zero, foundLocation # if this is the first record we are inserting
+    add $t3, $t0, $0 # location of first note
+    beq $t2, $0, insert_note # if no notes, insert at beginning
 
-    findLocation:
-        addi $t1, $t1, -8 # go back one record
-        # load the current record in t3 & t4
-        lw $t3, 0($t1)
-        lw $t4, 4($t1)
+    add $t3, $t0, $t2 # add number of notes to start location
+    addi $t3, $t3, -8 # move back one note 
 
-        add $t4, $t1, 8 # t4 points to the location to store the record
+    insert_note:
+    sw $a0, 0($t3) # insert record in next slot
+    sw $a1, 4($t3)
 
-        # if time_new_record > time_current_record
-        bgt $a0, $t3, foundLocation
+    jr $ra
 
 
-        # store the current record in the next slot
-        sw $t3, 0($t4)
-        sw $t4, 4($t4)
+    # findLocation:
+    #     addi $t1, $t1, -8 # go back one record
+    #     # load the current record in t3 & t5
+    #     lw $t3, 0($t1)
+    #     lw $t5, 4($t1)
+    #
+    #     add $t4, $t1, 8 # t4 points to the location to store the record
+    #
+    #     # if time_new_record > time_current_record
+    #     bgt $a0, $t3, foundLocation
+    #
+    #
+    #     # store the current record in the next slot
+    #     sw $t3, 0($t4)
+    #     sw $t5, 4($t4)
+    #
+    #     j findLocation
+    #
+    #
 
-        j findLocation
-
-
-    foundLocation:
-        # insert record in next slot
-        sw $a0, 0($t4)
-        sw $a1, 4($t4)
-
-        jr $ra
 
 
 # This method will move the notes into the file_buffer in proper MIDI format
