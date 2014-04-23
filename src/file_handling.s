@@ -38,7 +38,7 @@ save_file:
 	li $a1, 9  #open for writing
 	li $a2, 0 #mode ignored
 	syscall
-	move $s0, $v0
+	move $s6, $v0
 	#error check for open file
 	la $s0, error_open_msg
 	blt  $v0, $zero, errorMsg
