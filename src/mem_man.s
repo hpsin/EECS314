@@ -1,6 +1,7 @@
     .data
 mem_loc: .word 0    # store the starting address of the array
 mem_size: .word 0    # store the size of the array
+mem_alloc: .word 0     # store the amount of memory we have allocated
     .text
 
 mem_add:
@@ -28,10 +29,29 @@ mem_add:
     jr $ra
 
 expand:
+    # check how much memory we have allocated
+    la $t0, mem_alloc
+    lw $t0, 0($t0)
+    # check how much memory we have used
+    la $t1, mem_size
+    lw $t1, 0($t1)
+
+    sub $t2, $t0, $t1 # get the amount of unused allocated memory
+
+    addi $a0, $0, 8 # the amount we increase the allocation by
+    bge $t2, $a0, already_allocated
     # expand the array by 1 note (8 bytes)
-    li $a0, 8
     li $v0, 9 # sbrk
     syscall
+
+    # get ammound allocated
+    la $t0, mem_alloc
+    lw $t1, 0($t0)
+
+    add $t1, $t1, $a0 # add the amount we just allocated
+    sw $t1, 0($t0) # store it back
+
+    already_allocated:
 
     # check if we need to store the address of the list
     la $t0, mem_loc
@@ -139,25 +159,46 @@ mem_master_dump:
 # rather than the start/stop times
 # The address of the array will be stored in $v0
 mem_master:
-    lw $t0, mem_size($0)
+    la $t0, mem_size
+    lw $t0, 0($t0) # load amount used
 
-    # divide mem_size by 2 and allocate that amount
-    srl $t0, $t0, 1
+    la $t1, mem_alloc
+    lw $t2, 0($t1) # load allocated amount
+
+    sub $t3, $t2, $t0 # find difference between allocated and used
+
+    srl $t4, $t0, 1 # divide mem_size by 2 to get new array size
+
+    la $t5, mem_loc
+    lw $t5, 0($t5) # get memory address
+
+    add $v0, $t5, $t0 # set new array address to end of currently used
+
+    bge $t3, $t4, enough_free
+
     addi $v0, $zero, 9 # sbrk syscall
-    add $a0, $zero, $t0
+    sub $a0, $t4, $t3 # amount to allocate is (amount we need - amount free)
     syscall
+
+    la $t0, mem_alloc
+    lw $t1, 0($t0) # get the amount of memory allocated
+    add $t1, $t1, $a0 # increment allocated by the size we just allocated
+    sw $t1, 0($t0) # store the amount of allocated memory
+
+    enough_free:
 
     addi $sp, $sp, -4 # push frame onto stack
     sw $s0, 0($sp) # push s0 onto stack
     add $s0, $zero, $v0 # store array address in s0
 
-    # just in case the temps get overwritten by the syscall
-    lw $t1, mem_loc($0)
-    lw $t0, mem_size($0)
+    la $t0, mem_size
+    lw $t0, 0($t0) # load used memory size
+    la $t1, mem_loc
+    lw $t1, 0($t1) # load array address
 
-    # get the location of the last event
-    add $t3, $t1, $t0
-    addi $t3, $t3, -8
+
+    add $t3, $t1, $t0 # move to end of array
+    addi $t3, $t3, -8 # get the location of the last event
 
     # this is a little janky, but it makes my life easier
     addi $t1, $t1, -8 # move to one event worth before the start of the array
@@ -186,11 +227,9 @@ mem_master:
 
         note_on:
 
-            # store the event address in t4
-            add $t4, $zero, $t1
+            add $t4, $zero, $t1 # store the event address in t4
 
-            # load the note byte into a2
-            lbu $a2, 5($t4)
+            lbu $a2, 5($t4) # load the note byte into a2
 
             find_off:
                 addi $t4, $t4, 8 # move to the next event
