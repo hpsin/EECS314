@@ -2,7 +2,7 @@
 file_buffer: .space 100000 #MIDI file to read will not exceed 100K for complex files
 midi_header: .byte 0x4d, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xe0
 track_header: .byte 0x4d, 0x54, 0x72, 0x6b
-set_tempo: .byte 0x00, 0xff, 0x51, 0x03, 0x07, 0x53, 0x00
+set_tempo: .byte 0x00, 0xff, 0x51, 0x03, 0x07, 0x53, 0x00,0x00, 0xB0, 0x00, 0x00, 0xB1, 0x08, 0x00, 0xB2, 0x10, 0x00, 0xB3, 0x18, 0x00, 0xB4, 0x20, 0x00, 0xB5, 0x28, 0x00, 0xB6, 0x30, 0x00, 0xB7, 0x38, 0x00, 0xB8, 0x40, 0x00, 0xB9, 0x48, 0x00, 0xBA, 0x50, 0x00, 0xBB, 0x58, 0x00, 0xBC, 0x60, 0x00, 0xBD, 0x68, 0x00, 0xBE, 0x70, 0x00, 0xBF, 0x78
 error_read_msg: .asciiz "ERROR reading file"
 error_open_msg: .asciiz "ERROR opening file"
 error_write_midi_header_msg: .asciiz "ERROR writing the midi header"
@@ -11,29 +11,17 @@ error_write_track_length_msg: .asciiz "ERROR writing the track length"
 error_write_file_msg: .asciiz "ERROR writing to the file"
 error_no_file: .asciiz "ERROR no notes to save to file"
 error_set_tempo_msg: .asciiz "ERROR tempo didn't set correctly"
-track_length: .space 4
 
 	.text
 	.globl save_file
 	.globl load_file
 
 save_file:
- # push the return address to the stack
-    addi $sp, $sp, -4
-    sw $ra, 0($sp)
-
 #Check if the array is 0 before trying to save the file 
  	lw $t0, mem_size($0)
  	la $s0, error_no_file
 	beq  $t0, $zero, errorMsg
-
-# call diegos function to get fileBuffer and track_length
- 	jal mem_master_dump
  	
-
- # pop the return address from the stack
-    lw $ra, 0($sp)
-    addi $sp, $sp, 4
 #Open a file to write with the user inputted filename
 	li $v0, 13
 	la $a0, filename
@@ -71,7 +59,7 @@ save_file:
 	li $v0, 15
 	move $a0, $s6
 	lw $t0, mem_size
-	addi $t1, $zero, 7
+	addi $t1, $zero, 55
 	add $a1, $t0, $t1 
 	li $a2, 4 #number of bytes in the midi_header
 	syscall
@@ -83,7 +71,7 @@ save_file:
 	li $v0, 15
 	move $a0, $s6
 	la $a1, set_tempo
-	li $a2, 7 #number of bytes in the midi_header
+	li $a2, 55 #number of bytes in the midi_header
 	syscall
 	#error check for writing the track length
 	la $s0, error_set_tempo_msg
@@ -92,8 +80,8 @@ save_file:
 	#write the fileBuffer to the file
 	li $v0, 15
 	move $a0, $s6
-	la $a1, file_buffer
-	la $t0, track_length
+	la $a1, mem_loc
+	la $t0, mem_size
 	lw $a2, 0($t0) #load the length of the track to be written
 	syscall
 	#error check for writing the file

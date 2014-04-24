@@ -1,4 +1,4 @@
-# cat function which prints out current notes in load tracked 
+# cat function which prints out current notes in load tracked
 # with their start time, velocity, duration, and instrument
     .data
 msgNum: .asciiz "\n#: "
@@ -12,43 +12,37 @@ msgMP: .asciiz "MP"
 msgMF: .asciiz "MF"
 msgF: .asciiz "F "
 msgFF: .asciiz "FF"
-msgPia: .asciiz "Piano"
-msgCP: .asciiz "Chromatic Percussion"
-msgOrg: .asciiz "Organ"
-msgGui: .asciiz "Guitar"
+msgPiano: .asciiz "Piano"
+msgChromaticPercussion: .asciiz "Chromatic Percussion"
+msgOrgan: .asciiz "Organ"
+msgGuitar: .asciiz "Guitar"
 msgBass: .asciiz "Bass"
-msgStri: .asciiz "Strings"
-msgEns: .asciiz "Ensemble"
-msgBra: .asciiz "Brass"
+msgStrings: .asciiz "Strings"
+msgEnsemble: .asciiz "Ensemble"
+msgBrass: .asciiz "Brass"
 msgReed: .asciiz "Reed"
 msgPipe: .asciiz "Pipe"
-msgSL: .asciiz "Synth Lead"
-msgSP: .asciiz "Synth Pad"
-msgSE: .asciiz "Synth Effect"
-msgEth: .asciiz "Ethnic"
-msgPer: .asciiz "Percussion"
-msgEff: .asciiz "Sound Effect"
-msgVelError: .asciiz "****Error: A note does not have a velocity****"
-msgInstError: .asciiz "****Error: A note does not have an instrument****"
+msgSynthLead: .asciiz "Synth Lead"
+msgSynthPad: .asciiz "Synth Pad"
+msgSynthEffect: .asciiz "Synth Effect"
+msgEthnic: .asciiz "Ethnic"
+msgPercussion: .asciiz "Percussion"
+msgSoundEffect: .asciiz "Sound Effect"
 msgNoTrackForCat: .asciiz "****Error: There is currently no track in use****"
 
     .text
 cat:
-	
+
 	# get the number of notes currently loaded
 	la $a1, mem_size
     lw $a1, 0($a1) # load amount used
     beq $a1, $zero, cat_no_track
-    sw $ra, 0($sp)
-	jal mem_master
-	lw $ra, 0($sp)
-	addi $sp, $sp, 4
-	move $a3, $v0
-	la $a1, mem_size # reset $a1 and divide it by 16 to get
-    lw $a1, 0($a1) # the true number of notes in the track
-    srl $a1, $a1, 4
+    la $a3, mem_loc
+    lw $a3, 0($a3)
+
 	addi $a2, $zero, 1
-	addi $t0, $zero, -8
+	addi $t0, $zero, 0
+
 	j cat_loop
 
 cat_no_track:
@@ -69,30 +63,30 @@ cat_loop:
 	add $a0, $zero, $a2
 	syscall
 
-	addi $t0, $t0, 8
-	add $a3, $a3, $t0
-	lw $t3, 0($a3)
+	lw $t3, 0($a3) # gets the duration
 	lb $t4, 5($a3) # get the current note
 	lb $t5, 6($a3) # get the current velocity
 	lb $t6, 4($a3) # get the current instrument
-	andi $t6, $t6, 0x0F
+	andi $t6, $t6, 0x0F # removes command from byte
 
-	# prints the what note it is
+	# prints note label
 	li $v0, 4
 	la $a0, msgNote
 	syscall
 
+	# prints the current note
 	li $v0, 1
 	add $a0, $zero, $t4
 	syscall
 
-	#prints the velocity of the note
+	#prints the velocity label
 	li $v0, 4
 	la $a0, msgNoteVel
 	syscall
 
 	# tests velocities to see what value should be printed out
-	bne $t5, 1, test_p
+	bne $t5, 1, test_p # test if velocity is not pp
+
 	li $v0, 4
 	la $a0, msgPP
 	syscall
@@ -132,94 +126,91 @@ test_f:
 
 test_ff:
 
-	bne $t5, 6, cat_no_vel
 	li $v0, 4
 	la $a0, msgFF
 	syscall
 	j continue_cat
 
-cat_no_vel: 
-
-	li $v0, 1
-	add $a0, $t5, $zero
-	syscall
-	j continue_cat
-
 continue_cat:
 
-	#prints the duration of the note
+	#prints out duration label
 	li $v0, 4
 	la $a0, msgNoteDur
 	syscall
 
-	li $v0, 4
-	add $a0, $zero, $t1 
+	# calculates the duration
+	addi $a3, $a3, 8
+	lw $t7 0($a3)
+
+	li $v0, 1
+	add $a0, $zero, $t7
+
 	syscall
 
-	#prints the instrument of the note
+	#prints the instrument label
 	li $v0, 4
 	la $a0, msgNoteInst
 	syscall
 
-	bne $t6, 0, test_c_p
+	bne $t6, 0, test_chromatic_percussion
 	li $v0, 4
-	la $a0, msgPia
+	la $a0, msgPiano
 	syscall
 	j continue_cat_2
 
-test_c_p:
+test_chromatic_percussion:
 
-	bne $t6, 1, test_org
+	bne $t6, 1, test_organ
 	li $v0, 4
-	la $a0, msgCP
+	la $a0, msgChromaticPercussion
 	syscall
 	j continue_cat_2
 
-test_org:
+test_organ:
 
-	bne $t6, 2, test_gui
+	bne $t6, 2, test_guitar
 	li $v0, 4
-	la $a0, msgOrg
+	la $a0, msgOrgan
 	syscall
 	j continue_cat_2
 
-test_gui:
+test_guitar:
 
 	bne $t6, 3, test_bass
 	li $v0, 4
-	la $a0, msgGui
+	la $a0, msgGuitar
 	syscall
 	j continue_cat_2
 
 test_bass:
 
-	bne $t6, 4, test_stri
+	bne $t6, 4, test_strings
 	li $v0, 4
 	la $a0, msgBass
 	syscall
 	j continue_cat_2
 
-test_stri:
+test_strings:
 
-	bne $t6, 5, test_ens
+	bne $t6, 5, test_ensemble
 	li $v0, 4
-	la $a0, msgStri
+	la $a0, msgStrings
 	syscall
 	j continue_cat_2
 
-test_ens:
+test_ensemble:
 
-	bne $t6, 6, test_bra
+	bne $t6, 6, test_brass
 	li $v0, 4
-	la $a0, msgEns
+	la $a0, msgEnsemble
 	syscall
 	j continue_cat_2
 
-test_bra:
+test_brass:
 
 	bne $t6, 7, test_reed
 	li $v0, 4
-	la $a0, msgBra
+	la $a0, msgBrass
 	syscall
 	j continue_cat_2
 
@@ -233,70 +224,63 @@ test_reed:
 
 test_pipe:
 
-	bne $t6, 9, test_s_l
+	bne $t6, 9, test_synth_lead
 	li $v0, 4
 	la $a0, msgPipe
 	syscall
 	j continue_cat_2
 
-test_s_l:
+test_synth_lead:
 
-	bne $t6, 10, test_s_p
+	bne $t6, 10, test_synth_pad
 	li $v0, 4
-	la $a0, msgSL
+	la $a0, msgSynthLead
 	syscall
 	j continue_cat_2
 
-test_s_p:
+test_synth_pad:
 
-	bne $t6, 11, test_s_e
+	bne $t6, 11, test_synth_effect
 	li $v0, 4
-	la $a0, msgSP
+	la $a0, msgSynthPad
 	syscall
 	j continue_cat_2
 
-test_s_e:
+test_synth_effect:
 
-	bne $t6, 12, test_eth
+	bne $t6, 12, test_ethnic
 	li $v0, 4
-	la $a0, msgSE
+	la $a0, msgSynthEffect
 	syscall
 	j continue_cat_2
 
-test_eth:
+test_ethnic:
 
-	bne $t6, 13, test_per
+	bne $t6, 13, test_percussion
 	li $v0, 4
-	la $a0, msgEth
+	la $a0, msgEthnic
 	syscall
 	j continue_cat_2
 
-test_per:
+test_percussion:
 
-	bne $t6, 14, test_eff
+	bne $t6, 14, test_effect
 	li $v0, 4
-	la $a0, msgPer
+	la $a0, msgPercussion
 	syscall
 	j continue_cat_2
 
-test_eff:
+test_effect:
 
-	bne $t6, 15, cat_no_inst
 	li $v0, 4
-	la $a0, msgEff
-	syscall
-	j continue_cat_2
-
-cat_no_inst:
-
-	li $v0, 1
-	add $a0, $t6, $zero
+	la $a0, msgSoundEffect
 	syscall
 	j continue_cat_2
 
 continue_cat_2:
 
 	addi $a2, $a2, 1
-	addi $a1, $a1, -1
+	addi $a3, $a3, 8
+	addi $a1, $a1, -16
 	bne $a1, $zero, cat_loop
 	jr $ra
