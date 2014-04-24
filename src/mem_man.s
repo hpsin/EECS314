@@ -184,7 +184,7 @@ mem_seven_bit:
     andi $t2, $t2, 0x0000FF00
 
     # convert lsb to 7 bit
-    andi $t3, $a0, 0x000000EF
+    andi $t3, $a0, 0x0000007F
 
     add $v0, $0, $0 # clear v0
     or $v0, $v0, $t0
@@ -196,16 +196,16 @@ mem_seven_bit:
 
 # this function will turn the 7 bit word in a0 into a 8 bit word in v0
 mem_eight_bit:
-    andi $t0, $a0, 0xEF
-    andi $t1, $a0, 0xEF00
+    andi $t0, $a0, 0x7F
+    andi $t1, $a0, 0x7F00
     srl $t1, $t1, 1
     add $t0, $t0, $t1
 
-    andi $t1, $a0, 0xEF0000
+    andi $t1, $a0, 0x7F0000
     srl $t1, $t1, 2
     add $t0, $t0, $t1
 
-    andi $t1, $a0, 0xEF000000
+    andi $t1, $a0, 0x7F000000
     srl $t1, $t1, 3
     add $t0, $t0, $t1
 
