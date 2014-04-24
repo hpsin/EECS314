@@ -62,13 +62,13 @@ add_note:
 	addi $sp, $sp, 4
 
 	la $t7, MIDI_ON
-	sb $v0, 0($t7)
-	srl $v0, $v0, 8
-	sb $v0, 1($t7)
+	sb $v0, 3($t7)
 	srl $v0, $v0, 8
 	sb $v0, 2($t7)
 	srl $v0, $v0, 8
-	sb $v0, 3($t7)
+	sb $v0, 1($t7)
+	srl $v0, $v0, 8
+	sb $v0, 0($t7)
 
 
 	# Reset time to 0
@@ -87,13 +87,13 @@ add_note:
 	addi $sp, $sp, 4
 
 	la $t7, MIDI_OFF
-	sb $v0, 0($t7)
-	srl $v0, $v0, 8
-	sb $v0, 1($t7)
+	sb $v0, 3($t7)
 	srl $v0, $v0, 8
 	sb $v0, 2($t7)
 	srl $v0, $v0, 8
-	sb $v0, 3($t7)
+	sb $v0, 1($t7)
+	srl $v0, $v0, 8
+	sb $v0, 0($t7)
 
 	# push the return address to the stack
 	addi $sp, $sp, -4
