@@ -71,7 +71,7 @@ cat_loop:
 	addi $sp, $sp, 8
 	add $t3, $a0, $zero # puts the start time in $t3
 	lb $t4, 5($a3) # get the current note
-	lb $t5, 6($a3) # get the current velocity
+	lb $t5, 7($a3) # get the current velocity
 	lb $t6, 4($a3) # get the current instrument
 	andi $t6, $t6, 0x0F # removes command from byte
 
@@ -153,7 +153,7 @@ continue_cat:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 8
 	add $t7, $v0, $zero # transfers the 8-bit word to $t7
-	
+
 
 	li $v0, 1
 	add $a0, $zero, $t7
