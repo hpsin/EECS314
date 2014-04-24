@@ -91,7 +91,7 @@ cat_loop:
 	syscall
 
 	# tests velocities to see what value should be printed out
-	bne $t5, 1, test_p # test if velocity is not pp
+	bne $t5, 10, test_p # test if velocity is not pp
 
 	li $v0, 4
 	la $a0, msgPP
@@ -100,7 +100,7 @@ cat_loop:
 
 test_p:
 
-	bne $t5, 2, test_mp
+	bne $t5, 32, test_mp
 	li $v0, 4
 	la $a0, msgP
 	syscall
@@ -108,7 +108,7 @@ test_p:
 
 test_mp:
 
-	bne $t5, 3, test_mf
+	bne $t5, 52, test_mf
 	li $v0, 4
 	la $a0, msgMP
 	syscall
@@ -116,7 +116,7 @@ test_mp:
 
 test_mf:
 
-	bne $t5, 4, test_f
+	bne $t5, 73, test_f
 	li $v0, 4
 	la $a0, msgMF
 	syscall
@@ -124,7 +124,7 @@ test_mf:
 
 test_f:
 
-	bne $t5, 5, test_ff
+	bne $t5, 94, test_ff
 	li $v0, 4
 	la $a0, msgF
 	syscall
@@ -132,8 +132,8 @@ test_f:
 
 test_ff:
 
-	li $v0, 1
-	add $a0, $t5, $zero
+	li $v0, 4
+	la $a0, msgFF
 	syscall
 	j continue_cat
 
@@ -145,7 +145,7 @@ continue_cat:
 	syscall
 
 	# calculates the duration
-	addi $a3, $a3, 8 # increments the array of notes
+	addi $a3, $a3, 8 # increments the event to the off state
 	lw $a0, 0($a3)
 	addi $sp, $sp, -8
 	sw $ra, 0($sp)
