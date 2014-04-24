@@ -245,8 +245,10 @@ mem_master:
 
     enough_free:
 
-    addi $sp, $sp, -4 # push frame onto stack
+    addi $sp, $sp, -8 # push frame onto stack
     sw $s0, 0($sp) # push s0 onto stack
+    sw $ra, 4($sp) # push return address onto stack
+
     add $s0, $zero, $v0 # store array address in s0
 
     la $t0, mem_size
@@ -256,55 +258,25 @@ mem_master:
 
 
     add $t3, $t1, $t0 # move to end of array
-    addi $t3, $t3, -8 # get the location of the last event
-
-    # this is a little janky, but it makes my life easier
-    addi $t1, $t1, -8 # move to one event worth before the start of the array
 
     note_loop:
 
-        addi $t1, $t1, 8 # move to next event
+        lw $t4, 0($t1) # load event start time
+        lw $t5, 4($t1) # load other start event info
+        lw $t6, 8($t1) # load event stop time
 
+        sub $t4, $t6, $t4 # convert to duration
 
-        lw $a0, 0($t1) # load start time into a0
-        lbu $a1, 4($t1) # load command byte into a1
+        sw $t4, 0($s0) # store event duration
+        sw $t5, 4($s0) # store event info
 
-        srl $a1, $a1, 4 # shift the instrument bits out of the command
+        addi $s0, $s0, 8 # move one event
+        addi $t1, $t1, 16 # move 2 events (ON and OFF)
 
-        addi $t2, $zero, 9 # note_on command
-        beq $a1, $t2, note_on
+        bne $t1, $t3, note_loop # while we have not reached the end of the array
 
+    lw $ra, 4($sp) # pop return address from stack
+    lw $s0, 0($sp) # pop s0 from stack
+    addi $sp, $sp, 8 # pop frame from stack
 
-        # if we haven't reached the last event, loop
-        bne $t3, $t1, note_loop
-
-        lw $s0, 0($sp) # pop s0 from stack
-        addi $sp, $sp, 4 # pop frame from stack
-
-        jr $ra
-
-        note_on:
-
-            add $t4, $zero, $t1 # store the event address in t4
-
-            lbu $a2, 5($t4) # load the note byte into a2
-
-            find_off:
-                addi $t4, $t4, 8 # move to the next event
-
-                lbu $a3, 5($t4) # load note byte into a3
-
-                beq $a3, $a2, found_off
-
-                j find_off
-
-            found_off:
-                lw $t5, 0($t4) # load note off time into t5
-                lw $t6, 4($t4) # load other event info into t6
-                sub $t5, $t5, $a0 # find difference between note_on and note_off
-
-                sw $t5, 0($s0) # store delta in array
-                sw $t6, 4($s0) # store other event info in array
-                addi $s0, $s0, 8 # move array pointer to next index
-
-                j note_loop
+    jr $ra
