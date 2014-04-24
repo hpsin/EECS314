@@ -11,6 +11,7 @@ error_write_track_length_msg: .asciiz "ERROR writing the track length"
 error_write_file_msg: .asciiz "ERROR writing to the file"
 error_no_file: .asciiz "ERROR no notes to save to file"
 error_set_tempo_msg: .asciiz "ERROR tempo didn't set correctly"
+midi_track_length: .word 0
 
 	.text
 	.globl save_file
@@ -49,7 +50,7 @@ save_file:
 	li $v0, 15
 	move $a0, $s6
 	la $a1, track_header
-	li $a2, 4 #number of bytes in the midi_header
+	li $a2, 4 #number of bytes in the track_header
 	syscall
 	#error check for writing the track header
 	la $s0, error_write_track_header_msg
@@ -59,7 +60,17 @@ save_file:
 	li $v0, 15
 	move $a0, $s6
 	la $a1, mem_size
-	li $a2, 4 #number of bytes in the midi_header
+	lw $t0, 0($a1)
+	addi $t0, $t0, 58
+	la $a1, midi_track_length
+	sb $t0, 0($a1)  #Reversing the byte order
+	addi $t0, $t0, 1
+	sb $t0, 1($a1)
+	addi $t0, $t0, 1
+	sb $t0, 2($a1)
+	addi $t0, $t0, 1
+	sb $t0, 3($a1)
+	li $a2, 4 #number of bytes in the track length
 	syscall
 	#error check for writing the track length
 	la $s0, error_write_track_length_msg
@@ -78,7 +89,7 @@ save_file:
 	#write the fileBuffer to the file
 	li $v0, 15
 	move $a0, $s6
-	la $a1, mem_loc
+	lw $a1, mem_loc
 	la $t0, mem_size
 	lw $a2, 0($t0) #load the length of the track to be written
 	syscall
