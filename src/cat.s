@@ -148,7 +148,7 @@ continue_cat:
 	addi $a3, $a3, 8 # increments the event to the off state
 	
 	lb $a0, 0($a3)
-	sll $a0, a0, 8
+	sll $a0, $a0, 8
 	
 	lb $t1, 1($a3)
 	sll $t0, $t0, 8
