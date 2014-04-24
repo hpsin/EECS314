@@ -39,11 +39,15 @@ cat:
 	la $a1, mem_size
     lw $a1, 0($a1) # load amount used
     beq $a1, $zero, cat_no_track
+    sw $ra, 0($sp)
+	jal mem_master
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	move $a3, $v0
 	la $a1, mem_size # reset $a1 and divide it by 16 to get
     lw $a1, 0($a1) # the true number of notes in the track
     srl $a1, $a1, 4
 	addi $a2, $zero, 1
-	la $a3, mem_loc($zero)
 	addi $t0, $zero, -8
 	j cat_loop
 
@@ -66,6 +70,7 @@ cat_loop:
 	syscall
 
 	addi $t0, $t0, 8
+	add $a3, $a3, $t0
 	lw $t3, 0($a3)
 	lb $t4, 5($a3) # get the current note
 	lb $t5, 6($a3) # get the current velocity
@@ -146,10 +151,6 @@ continue_cat:
 	li $v0, 4
 	la $a0, msgNoteDur
 	syscall
-
-	addi $t0, $t0, 8
-	lw $t1, mem_loc($t0)
-	sub $t1, $t1, $t3
 
 	li $v0, 4
 	add $a0, $zero, $t1 
