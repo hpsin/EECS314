@@ -7,7 +7,7 @@
 	.globl add_rest
 
 add_note:
-  	li $t0, 15
+	li $t0, 15
 	bgt $a3, $t0, add_note_bad_instrument
 
 	addi $sp, $sp, -4
@@ -18,7 +18,7 @@ add_note:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 
-    
+
 	move $t2, $a0
 	li $v0, 4
 	la $a0, add_note_msg
@@ -42,8 +42,8 @@ add_note:
 	# store velocity in byte 6
 	li $t3, 6
 	addi $a1, $a1, 0x8000
-	sb $a1, MIDI_ON($t3)
-	sb $a1, MIDI_OFF($t3)
+	sh $a1, MIDI_ON($t3)
+	sh $a1, MIDI_OFF($t3)
 
 	#load byte 2,3 store byte 2,3 of time in MIDI_ON bytes 0,
 	lw $a0, time		# Get rest time
@@ -58,14 +58,14 @@ add_note:
 	addi $sp, $sp, 4
 
 	sw $v0, MIDI_ON($zero)
-	
+
 	# Reset time to 0
 	sw $zero, time
 
 	move $a0, $a2		#Get delta
 	li $t0, 120			#480 ticks per quarter note
 	mul $a0, $a0, $t0  #Convert from 16th notes to ticks
-	
+
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	# Call convert duration to 7 bit.
@@ -73,9 +73,9 @@ add_note:
 	# pop the return address from the stack
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
-	
+
 	sw $v0, MIDI_OFF($zero)
-	
+
 	# push the return address to the stack
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -99,7 +99,7 @@ add_rest:
 	li $v0, 4
 	la $a0, add_rest_msg
 	syscall
-	
+
 	lw $t0, time($zero)
 	add $t0, $t0, $a2		# time += duration
 	sw $t0, time($zero)
