@@ -40,10 +40,14 @@ add_note:
 	sb $t2, MIDI_ON($t3)
 	sb $t2, MIDI_OFF($t3)
 	# store velocity in byte 6
-	li $t3, 6
+	li $t3, 7
 	addi $a1, $a1, 0x8000
-	sh $a1, MIDI_ON($t3)
-	sh $a1, MIDI_OFF($t3)
+	sb $a1, MIDI_ON($t3)
+	sb $a1, MIDI_OFF($t3)
+	srl $a1, $a1, 8
+	addi $t3, $t3, -1
+	sb $a1, MIDI_ON($t3)
+	sb $a1, MIDI_OFF($t3)
 
 	#load byte 2,3 store byte 2,3 of time in MIDI_ON bytes 0,
 	lw $a0, time		# Get rest time
