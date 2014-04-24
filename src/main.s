@@ -89,8 +89,10 @@ finish_str_update:
 	addi $sp, $sp, -8
 	sw $ra, 4($sp)
 	sw $t1, 0($sp)
-	la $a0, input_string
+	la $a0, input_prompt
 	jal add_string_to_history
+	la $a0, input_string
+	jal add_string_to_history	
 	lw $t1, 0($sp)
 	lw $ra, 4($sp)
 	addi $sp, $sp, 8
