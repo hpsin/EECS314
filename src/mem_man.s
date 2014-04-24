@@ -132,6 +132,12 @@ mem_load:
     add $a0, $t1, $0 # amount to allocate
     syscall
 
+    # check if we need to store the address of the list
+    la $t0, mem_loc
+    lw $t1, 0($t0)
+    bne $t1, $zero, done_allocating
+    sw $v0, 0($t0)
+
     done_allocating:
 
-        jr $ra
+    jr $ra

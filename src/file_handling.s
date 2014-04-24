@@ -1,5 +1,5 @@
 	.data
-file_buffer: .space 100000 #MIDI file to read will not exceed 100K for complex files
+file_buffer: .word 0 #MIDI file to read will not exceed 100K for complex files
 midi_header: .byte 0x4d, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xe0
 track_header: .byte 0x4d, 0x54, 0x72, 0x6b
 set_tempo: .byte 0x00, 0xff, 0x51, 0x03, 0x07, 0x53, 0x00,0x00, 0xB0, 0x00, 0x00, 0xB1, 0x08, 0x00, 0xB2, 0x10, 0x00, 0xB3, 0x18, 0x00, 0xB4, 0x20, 0x00, 0xB5, 0x28, 0x00, 0xB6, 0x30, 0x00, 0xB7, 0x38, 0x00, 0xB8, 0x40, 0x00, 0xB9, 0x48, 0x00, 0xBA, 0x50, 0x00, 0xBB, 0x58, 0x00, 0xBC, 0x60, 0x00, 0xBD, 0x68, 0x00, 0xBE, 0x70, 0x00, 0xBF, 0x78,0x00, 0xBF, 0x78
@@ -19,15 +19,15 @@ file_temp: .space 4
 	.globl load_file
 
 save_file:
-#Check if the array is 0 before trying to save the file 
+#Check if the array is 0 before trying to save the file
  	lw $t0, mem_size($0)
  	la $s0, error_no_file
 	beq  $t0, $zero, errorMsg
- 	
+
 #Open a file to write with the user inputted filename
 	li $v0, 13
 	la $a0, filename
-	li $a1, 9  #open for writing
+	li $a1, 1 #open for writing
 	li $a2, 0 #mode ignored
 	syscall
 	move $s6, $v0
@@ -41,23 +41,6 @@ save_file:
 	li $v0, 15
 	move $a0, $s6
 	la $a1, mem_size
-	lw $t0, 0($a1)
-	addi $t0, $t0, 58
-	la $a1, midi_track_length
-	la $t1, file_temp
-	sw $t0, 0($t1)
-	addi $t1, $t1, -3
-	lb $t2, 0($t1)
-	sb $t2, 0($a1)
-	addi $t1, $t1, 1
-	lb $t2, 0($t1)
-	sb $t2, 1($a1)
-	addi $t1, $t1, 1
-	lb $t2, 0($t1)
-	sb $t2, 2($a1)
-	addi $t1, $t1, 1
-	lb $t2, 0($t1)
-	sb $t2, 3($a1)
 	li $a2, 4 #number of bytes in the track length
 	syscall
 	#error check for writing the track length
@@ -75,11 +58,11 @@ save_file:
 	la $s0, error_write_file_msg
 	blt  $v0, $zero, errorMsg
 
-	# Close the file 
+	# Close the file
   	li   $v0, 16       # system call for close file
   	move $a0, $s6      # file descriptor to close
   	syscall            # close file
-	
+
 	jr $ra
 
 
@@ -152,11 +135,11 @@ save_file:
 	la $s0, error_write_file_msg
 	blt  $v0, $zero, errorMsg
 
-	# Close the file 
+	# Close the file
   	li   $v0, 16       # system call for close file
   	move $a0, $s6      # file descriptor to close
   	syscall            # close file
-	
+
 	jr $ra
 
 load_file:
@@ -170,7 +153,7 @@ load_file:
 	#error check for open file
 	la $s0, error_open_msg
 	blt  $v0, $zero, errorMsg
-	
+
 	#Read from the file just opened
 	add $a0, $zero, $v0
 	li $v0, 14
@@ -183,7 +166,8 @@ load_file:
     sw $ra, 0($sp)
 
     #Call diegos method to allocate the  memory
-    lw $a0, file_buffer($zero)
+	la $a0, file_buffer
+    lw $a0, 0($a0)
     jal mem_load
      # pop the return address from the stack
     lw $ra, 0($sp)
@@ -203,7 +187,7 @@ load_file:
 	#close file after reading it
 	li $v0, 16
 	la $a0, filename
-	syscall	
+	syscall
 
 	jr $ra
 
@@ -212,4 +196,3 @@ errorMsg:
 	li $v0, 4
 	syscall
 	jr $ra
-
