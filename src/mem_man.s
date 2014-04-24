@@ -117,3 +117,21 @@ mem_eight_bit:
     add $v0, $t0, $0
 
     jr $ra
+
+# expands memory allocated if needed to fit the amount of space requested in a0
+mem_load:
+    la $t0, mem_size
+    lw $t1, 0($t0)
+
+    sub $t1, $a0, $t1 # find difference in needed vs current
+    sw $a0, 0($t0) # store a0 as new mem_size
+
+    bltz $t1, done_allocating
+
+    addi $v0, $0, 9 # sbrk syscall
+    add $a0, $t1, $0 # amount to allocate
+    syscall
+
+    done_allocating:
+
+        jr $ra
