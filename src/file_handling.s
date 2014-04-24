@@ -42,7 +42,6 @@ save_file:
 	move $a0, $s6
 	la $a1, mem_size
 	lw $t0, 0($a1)
-	addi $t0, $t0, 58
 	la $a1, midi_track_length
 	la $t1, file_temp
 	sw $t0, 0($t1)
