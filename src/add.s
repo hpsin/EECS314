@@ -61,22 +61,23 @@ add_note:
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
 
-	sb $v0, MIDI_ON($zero)
+	la $t7, MIDI_ON
+	sb $v0, 0($t7)
 	srl $v0, $v0, 8
-	sb $v0, 1(MIDI_ON)
+	sb $v0, 1($t7)
 	srl $v0, $v0, 8
-	sb $v0, 2(MIDI_ON)
+	sb $v0, 2($t7)
 	srl $v0, $v0, 8
-	sb $v0, 3(MIDI_ON)
-	
-	
+	sb $v0, 3($t7)
+
+
 	# Reset time to 0
 	sw $zero, time
 
 	move $a0, $a2		#Get delta
 	li $t0, 120			#480 ticks per quarter note
 	mul $a0, $a0, $t0  #Convert from 16th notes to ticks
-	
+
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	# Call convert duration to 7 bit.
@@ -84,15 +85,16 @@ add_note:
 	# pop the return address from the stack
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
-	
-	sb $v0, MIDI_OFF($zero)
+
+	la $t7, MIDI_OFF
+	sb $v0, 0($t7)
 	srl $v0, $v0, 8
-	sb $v0, 1(MIDI_OFF)
+	sb $v0, 1($t7)
 	srl $v0, $v0, 8
-	sb $v0, 2(MIDI_OFF)
+	sb $v0, 2($t7)
 	srl $v0, $v0, 8
-	sb $v0, 3(MIDI_OFF)
-	
+	sb $v0, 3($t7)
+
 	# push the return address to the stack
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
