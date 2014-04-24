@@ -6,7 +6,11 @@ main:
 	sw $ra, 0($sp)
 
 	la $t0, input_history
+	li $t1, 0xA
+	sb $t1, 0($t0)
 	sw $t0, input_history_start
+	addi $t0, $t0, 1
+	sw $t0, input_history_end
 
 	li $v0, 4
 	la $a0, splash_screen
@@ -81,6 +85,16 @@ finish_str_update:
 	li $t0, 0xA
 	bne $t2, $t0, read_command_loop
 
+	
+	addi $sp, $sp, -8
+	sw $ra, 4($sp)
+	sw $t1, 0($sp)
+	la $a0, input_string
+	jal add_string_to_history
+	lw $t1, 0($sp)
+	lw $ra, 4($sp)
+	addi $sp, $sp, 8
+	
 	# erase the newline character
 	addi $t1, $t1, -1
 	sb $zero 0($t1)
@@ -164,24 +178,23 @@ call_help:
 	j command_finished
 
 call_unknown:
-	li $v0, 4
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
 	la $a0, error_message
-	syscall
+	jal print_string_with_history
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
 
 	li $v0, 12
 	syscall
 	j command_finished
 
-	addi $sp, $sp, -4
-	sw $ra, 0($sp)
-
-	jal play_note
-
 command_finished:
-
+	
 	lw $ra, 0($sp)
 	addi $sp, $sp, 4
-
+	
+	
 	j read_command
 	jr $ra
 	nop
@@ -196,6 +209,7 @@ refresh_screen:
 	li $v0, 4
 	la $a0, clear_screen
 	syscall
+	
 
 	# print the input history
 	#########################
@@ -223,6 +237,11 @@ print_input_history_aligned:
 	syscall
 	
 print_input_history_end:
+
+	li $v0, 11
+	li $a0, 0xA
+	syscall
+	
 	# print the $ sign
 	li $v0, 4
 	la $a0, input_prompt
@@ -244,8 +263,91 @@ print_input_history_end:
 
 	jr $ra
 
+print_string_with_history:
+	# print the string
+	li $v0,  4
+	syscall
+
+add_string_to_history:	
+	add $t0, $a0, $zero
+	# get pointer to start of history
+	la $t1, input_history_start
+	lw $t1, 0($t1)
+	# get pointer to end of history
+	la $t2, input_history_end
+	lw $t2, 0($t2)
+	la $t3, input_history_size
+	lw $t3, 0($t3)
+	addi $t3, $t3, -1
+	la $t4, input_history
+	add $t3, $t3, $t4
+	li $t7, 0xA
+
+# while(*string_pos != '\0')
+print_string_with_history_outer_loop:
+	lb $t4, 0($t0)
+	beq $t4, $zero, print_string_with_history_outer_loop_end
+
+	# if(input_history_end == history_size -1)
+	bne $t2, $t3, print_string_with_history_no_cycle1
+
+	add $t2, $t1, $zero # cycle around
+	
+print_string_with_history_no_cycle1:
+
+	# if(input_history_end == input_history_start)
+	bne $t1, $t2, print_string_with_history_write_char
+
+print_string_with_history_inner_loop:
+	lb $t4, 0($t1)
+	# while(*input_history_start != '\n')
+	beq $t4, $t7, print_string_with_history_inner_loop_end
+
+	# *input_history_start = '\0'
+	sb $zero, 0($t1)
+	# input_history_start++
+	addi $t1, $t1, 1
+
+	# if(input_history_start == history_size - 1)
+	bne $t1, $t3, print_string_with_history_no_cycle2
+	la $t1, input_history
+	
+print_string_with_history_no_cycle2:
+	# if(input_history_start == input_history_end)
+	beq $t1, $t3, print_string_with_history_inner_loop_end
+
+	j print_string_with_history_inner_loop
+
+print_string_with_history_inner_loop_end:
+	# *input_history_start = '\0'
+	sb $zero, 0($t1)
+	# input_history_start++
+	addi $t1, $t1, 1
+	
+print_string_with_history_write_char:	
+	# *input_history_end = *string_pos
+	lb $t4, 0($t0)
+	sb $t4, 0($t2)
+	addi $t0, $t0, 1 # string_pos++
+	addi $t2, $t2, 1 # input_history_end++
+	
+	j print_string_with_history_outer_loop
+print_string_with_history_outer_loop_end:
+
+	# save the registers back to memory
+	la $t4, input_history_start
+	sw $t1, 0($t4)
+	la $t4, input_history_end
+	sw $t2, 0($t4)
+	
+	jr $ra
+	
+
 .data
 input_string: .space 100 # 99 char string
+input_history_size: .word 10000 # size of input history buffer
 input_history: .space 10000 # 9999 char string
 input_history_start: .word 0
+input_history_end: .word 0
+blank_string: .asciiz "\n"
 error_message: .asciiz "ERROR: Unknown or malformed command\n [Press Enter]"
