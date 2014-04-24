@@ -98,14 +98,17 @@ play_song:
 		sll $a0, $a0, 8
 
 		lb $t2, 1($t1)
+		andi $t2, $t2, 0xFF
 		or $a0, $a0, $t2
 		sll $a0, $a0, 8
 
 		lb $t2, 2($t1)
+		andi $t2, $t2, 0xFF
 		or $a0, $a0, $t2
 		sll $a0, $a0, 8
 
 		lb $t2, 3($t1)
+		andi $t2, $t2, 0xFF
 		or $a0, $a0, $t2
 
 		addi $sp, $sp, -4 # push frame onto stack
@@ -132,16 +135,18 @@ play_song:
 		sll $a0, $a0, 8
 
 		lb $t2, 9($t1)
+		andi $t2, $t2, 0xFF
 		or $a0, $a0, $t2
 		sll $a0, $a0, 8
 
 		lb $t2, 10($t1)
+		andi $t2, $t2, 0xFF
 		or $a0, $a0, $t2
 		sll $a0, $a0, 8
 
 		lb $t2, 11($t1)
+		andi $t2, $t2, 0xFF
 		or $a0, $a0, $t2
-
 
 
 		addi $sp, $sp, -4 # push frame onto stack
