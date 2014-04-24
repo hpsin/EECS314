@@ -61,7 +61,7 @@ play_note_exec:
         # scale the instrument
         li $t2, 8
         mult $a3, $t2
-        mflo $t2 
+        mflo $t2
 	add $t3, $a1, $zero
 
 	add $a1, $t1, $zero
@@ -75,52 +75,78 @@ play_note_exec:
 
 play_song:
 
-	lw $t1, mem_size($0)
+	la $t0, mem_size
+	lw $t0, 0($t0)
 
-	beq $t1, $0, empty_song
+	beq $t0, $0, empty_song
 
-	addi $sp, $sp, -4
-	sw $ra, 0($sp)
-	jal mem_master
+	la $t1, mem_loc
+	lw $t1, 0($t0)
 
-	add $t0, $v0, $0
+	addi $sp, $sp, 8 # push frame onto stack
+	sw $ra, 0($sp) # push return address onto stack
+	sw $s0, 4($sp) # push s0 onto stack
 
-
-	lw $t1, mem_size($0)
-	srl $t1, $t1, 1 # gets the array size
+	add $s0, $t0, $t1 # store end of array in s0
 
 	play_list_of_notes:
 
-	beq $t1, $0, exit
-                # convert this to a valid midi volume
-    	        lb $a1, 6($t0)
-                addi $sp, $sp, -8
-                sw $ra, 4($sp)
-                sw $t0, 0($sp)
-                jal map_dynamics_to_volume
-                lw $t0, 0($sp)
-                lw $ra, 4($sp)
-                addi $sp, $sp, 8
-                add $a3, $a1, $zero
+		beq $t1, $s0, exit
 
-                # convert to milliseconds
-		lb $a1, 0($t0) # a1 now contains the first 4 bytes
-                li $t2, 1000
-                mult $a1, $t2
-                mflo $a1
-    
-		lb $a0, 5($t0) # a0 now contains the sixith byte (note)
-		lb $a2, 4($t0)
+		lw $a0, 0($t1) # a0 now contains the first 4 bytes (start delta)
+
+		addi $sp, $sp, -4 # push frame onto stack
+		sw $t1, 0($sp) # push t1 onto stack
+
+		jal mem_eight_bit # convert a0 to eight bit bytes
+
+		lw $t1, 0($sp) # pop t1 from stack
+		addi $sp, $sp, 4 # pop frame from stack
+
+		add $a1, $v0, $zero # move converted delta to a1
+
+		# convert to milliseconds
+        addi $t2, $0, 1000
+        mult $a1, $t2
+        mflo $a1
+
+		lb $a2, 4($t1) # a2 now contains command/instrument byte
 		andi $a2, $a2, 0x0F # a2 is now the instrument
 
-                
-
-		addi $t0, $t0, 8 # sets t0 to the next note
+		lb $a0, 5($t1) # a0 now contains the note byte note
+		lb $a3, 7($t1) # a3 now contains the velocity byte
 
 		li $v0, 33
 		syscall
 
-		addi $t1, $t1, -8
+		lw $a0, 8($t1) # a0 now contains the first 4 bytes (stop delta)
+
+
+		addi $sp, $sp, -4 # push frame onto stack
+		sw $t1, 0($sp) # push t1 onto stack
+
+		jal mem_eight_bit # convert a0 to eight bit bytes
+
+		lw $t1, 0($sp) # pop t1 from stack
+		addi $sp, $sp, 4 # pop frame from stack
+
+		add $a1, $v0, $zero # move converted delta to a1
+
+		# convert to milliseconds
+		addi $t2, $0, 1000
+		mult $a1, $t2
+		mflo $a1
+
+		lb $a2, 12($t1) # a2 now contains command/instrument byte
+		andi $a2, $a2, 0x0F # a2 is now the instrument
+
+		lb $a0, 13($t1) # a0 now contains the note byte note
+		lb $a3, 15($t1) # a3 now contains the velocity byte
+
+		li $v0, 33
+		syscall
+
+		addi $t1, $t1, 16 # sets t0 to the next note
 
 		j play_list_of_notes
 
@@ -146,9 +172,9 @@ map_dynamics_to_volume:
     beq $a1, $t0, play_note_f
     j play_note_ff
 
-map_dynamics_to_volume_end: 
+map_dynamics_to_volume_end:
     jr $ra
-    
+
 play_note_pp:
 	li $a1, 10
 	j map_dynamics_to_volume_end
@@ -171,7 +197,7 @@ play_note_f:
 
 play_note_ff:
 	li $a1, 127
-        j map_dynamics_to_volume_end
+    j map_dynamics_to_volume_end
 
 	.data
 play_song_msg:	.asciiz "TODO: Implement play_song method\n[Press any key to continue]"
