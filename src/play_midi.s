@@ -39,7 +39,7 @@ play_note_arg2:
 	j play_note_arg2
 
 play_note_arg2_milli:
-	li $t0, 1000
+	li $t0, 120
 	mult $a2, $t0
 	mflo $a2
 
