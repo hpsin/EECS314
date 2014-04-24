@@ -146,7 +146,22 @@ continue_cat:
 
 	# calculates the duration
 	addi $a3, $a3, 8 # increments the event to the off state
-	lw $a0, 0($a3)
+	
+	lb $a0, 0($a3)
+	sll $a0, a0, 8
+	
+	lb $t1, 1($a3)
+	sll $t0, $t0, 8
+	or $a0, $a0, $t1
+	
+	lb $t2, 2($a3)
+	sll $t2, $t2, 8
+	or $a0, $a0, $t2
+
+	lb $t3, 3($a3)
+	sll $t3, $t3, 8
+	or $a0, $a0, $t3
+
 	addi $sp, $sp, -8
 	sw $ra, 0($sp)
 	jal mem_eight_bit
