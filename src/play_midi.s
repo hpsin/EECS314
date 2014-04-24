@@ -93,7 +93,20 @@ play_song:
 
 		beq $t1, $s0, exit
 
-		lw $a0, 0($t1) # a0 now contains the first 4 bytes (start delta)
+		# a0 now contains the first 4 bytes (start delta)
+		lb $a0, 0($t1)
+		sll $a0, $a0, 8
+
+		lb $t2, 1($t1)
+		or $a0, $a0, $t2
+		sll $a0, $a0, 8
+
+		lb $t2, 2($t1)
+		or $a0, $a0, $t2
+		sll $a0, $a0, 8
+
+		lb $t2, 3($t1)
+		or $a0, $a0, $t2
 
 		addi $sp, $sp, -4 # push frame onto stack
 		sw $t1, 0($sp) # push t1 onto stack
@@ -114,7 +127,21 @@ play_song:
 		li $v0, 33
 		syscall
 
-		lw $a0, 8($t1) # a0 now contains the first 4 bytes (stop delta)
+		# a0 now contains the first 4 bytes (start delta)
+		lb $a0, 8($t1)
+		sll $a0, $a0, 8
+
+		lb $t2, 9($t1)
+		or $a0, $a0, $t2
+		sll $a0, $a0, 8
+
+		lb $t2, 10($t1)
+		or $a0, $a0, $t2
+		sll $a0, $a0, 8
+
+		lb $t2, 11($t1)
+		or $a0, $a0, $t2
+
 
 
 		addi $sp, $sp, -4 # push frame onto stack
