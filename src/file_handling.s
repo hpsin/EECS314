@@ -12,6 +12,7 @@ error_write_file_msg: .asciiz "ERROR writing to the file"
 error_no_file: .asciiz "ERROR no notes to save to file"
 error_set_tempo_msg: .asciiz "ERROR tempo didn't set correctly"
 midi_track_length: .word 0
+file_temp: .space 4
 
 	.text
 	.globl save_file
@@ -63,13 +64,20 @@ save_file:
 	lw $t0, 0($a1)
 	addi $t0, $t0, 58
 	la $a1, midi_track_length
-	sb $t0, 0($a1)  #Reversing the byte order
-	addi $t0, $t0, 1
-	sb $t0, 1($a1)
-	addi $t0, $t0, 1
-	sb $t0, 2($a1)
-	addi $t0, $t0, 1
-	sb $t0, 3($a1)
+	la $t1, file_temp
+	sw $t0, 0($t1)
+	addi $t1, $t1, -3
+	lb $t2, 0($t1)
+	sb $t2, 0($a1)
+	addi $t1, $t1, 1
+	lb $t2, 0($t1)
+	sb $t2, 1($a1)
+	addi $t1, $t1, 1
+	lb $t2, 0($t1)
+	sb $t2, 2($a1)
+	addi $t1, $t1, 1
+	lb $t2, 0($t1)
+	sb $t2, 3($a1)
 	li $a2, 4 #number of bytes in the track length
 	syscall
 	#error check for writing the track length
