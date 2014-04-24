@@ -81,7 +81,7 @@ play_song:
 	beq $t0, $0, empty_song
 
 	la $t1, mem_loc
-	lw $t1, 0($t0)
+	lw $t1, 0($t1)
 
 	addi $sp, $sp, 8 # push frame onto stack
 	sw $ra, 0($sp) # push return address onto stack
@@ -105,11 +105,6 @@ play_song:
 
 		add $a1, $v0, $zero # move converted delta to a1
 
-		# convert to milliseconds
-        addi $t2, $0, 1000
-        mult $a1, $t2
-        mflo $a1
-
 		lb $a2, 4($t1) # a2 now contains command/instrument byte
 		andi $a2, $a2, 0x0F # a2 is now the instrument
 
@@ -131,11 +126,6 @@ play_song:
 		addi $sp, $sp, 4 # pop frame from stack
 
 		add $a1, $v0, $zero # move converted delta to a1
-
-		# convert to milliseconds
-		addi $t2, $0, 1000
-		mult $a1, $t2
-		mflo $a1
 
 		lb $a2, 12($t1) # a2 now contains command/instrument byte
 		andi $a2, $a2, 0x0F # a2 is now the instrument
