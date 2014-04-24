@@ -37,8 +37,9 @@ add_note:
 	sb $a1, MIDI_OFF($t3)
 
 	#load byte 2,3 store byte 2,3 of time in MIDI_ON bytes 0,
-	lw $a0, time
-
+	lw $a0, time		# Get rest time
+	li $t0, 120			#480 ticks per quarter note
+	mult $a0, $a0, $t0  #convert to ticks from 16th notes
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	# Call convert time to 7 bit.
@@ -52,8 +53,9 @@ add_note:
 	# Reset time to 0
 	sw $zero, time
 
-	move $a0, $a2
-
+	move $a0, $a2		#Get delta
+	mult $a0, $a0, $t0  #Convert from 16th notes to ticks
+	
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
 	# Call convert duration to 7 bit.
