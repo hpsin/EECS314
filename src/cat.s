@@ -152,9 +152,8 @@ continue_cat:
 	jal mem_eight_bit
 	lw $ra, 0($sp)
 	addi $sp, $sp, 8
-	add $t7, $a0, $zero # transfers the 8-bit word to $t7
-	sub $t7, $t7, $t3 # the difference between the end time and start time
-	
+	add $t7, $v0, $zero # transfers the 8-bit word to $t7
+
 
 	li $v0, 1
 	add $a0, $zero, $t7
