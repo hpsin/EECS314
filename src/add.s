@@ -54,6 +54,7 @@ add_note:
 	sw $zero, time
 
 	move $a0, $a2		#Get delta
+	li $t0, 120			#480 ticks per quarter note
 	mul $a0, $a0, $t0  #Convert from 16th notes to ticks
 	
 	addi $sp, $sp, -4
