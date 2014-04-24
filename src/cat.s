@@ -33,8 +33,8 @@ msgNoTrackForCat: .asciiz "****Error: There is currently no track in use****"
     .text
 cat:
 
-	# get the number of notes currently loaded
-	la $a1, mem_size
+# get the number of notes currently loaded
+la $a1, mem_size
     lw $a1, 0($a1) # load amount used
     beq $a1, $zero, cat_no_track
     la $a3, mem_loc
@@ -63,9 +63,15 @@ cat_loop:
 	add $a0, $zero, $a2
 	syscall
 
-	lw $t3, 0($a3) # gets the duration
+	lw $a0, 0($a3) # gets the duration
+	addi $sp, $sp, -8
+	sw $ra, 0($sp)
+	jal mem_eight_bit
+	lw $ra, 0($sp)
+	addi $sp, $sp, 8
+	add $t3, $a0, $zero # puts the start time in $t3
 	lb $t4, 5($a3) # get the current note
-	lb $t5, 6($a3) # get the current velocity
+	lb $t5, 7($a3) # get the current velocity
 	lb $t6, 4($a3) # get the current instrument
 	andi $t6, $t6, 0x0F # removes command from byte
 
@@ -126,8 +132,8 @@ test_f:
 
 test_ff:
 
-	li $v0, 4
-	la $a0, msgFF
+	li $v0, 1
+	add $a0, $t5, $zero
 	syscall
 	j continue_cat
 
@@ -139,12 +145,19 @@ continue_cat:
 	syscall
 
 	# calculates the duration
-	addi $a3, $a3, 8
-	lw $t7 0($a3)
+	addi $a3, $a3, 8 # increments the array of notes
+	lw $a0, 0($a3)
+	addi $sp, $sp, -8
+	sw $ra, 0($sp)
+	jal mem_eight_bit
+	lw $ra, 0($sp)
+	addi $sp, $sp, 8
+	add $t7, $a0, $zero # transfers the 8-bit word to $t7
+	sub $t7, $t7, $t3 # the difference between the end time and start time
+	
 
 	li $v0, 1
 	add $a0, $zero, $t7
-
 	syscall
 
 	#prints the instrument label
