@@ -37,15 +37,32 @@ save_file:
 
 	#write to the now open file
 
+#write the track_header length section
 	li $v0, 15
 	move $a0, $s6
-	la $a0, mem_size
-	li $a2, 4 
+	la $a1, mem_size
+	lw $t0, 0($a1)
+	addi $t0, $t0, 58
+	la $a1, midi_track_length
+	la $t1, file_temp
+	sw $t0, 0($t1)
+	addi $t1, $t1, -3
+	lb $t2, 0($t1)
+	sb $t2, 0($a1)
+	addi $t1, $t1, 1
+	lb $t2, 0($t1)
+	sb $t2, 1($a1)
+	addi $t1, $t1, 1
+	lb $t2, 0($t1)
+	sb $t2, 2($a1)
+	addi $t1, $t1, 1
+	lb $t2, 0($t1)
+	sb $t2, 3($a1)
+	li $a2, 4 #number of bytes in the track length
 	syscall
-	#error check for writing the file
-	la $s0, error_write_file_msg
+	#error check for writing the track length
+	la $s0, error_write_track_length_msg
 	blt  $v0, $zero, errorMsg
-
 
 	#write the fileBuffer to the file
 	li $v0, 15
