@@ -31,6 +31,7 @@
 - `save f` - save the working track to file location f
 - `help` - display commands available
 
+Durations are a number of 16th notes.  Quarter notes are 480ms each. 
 
 ## Instruments:
 
@@ -51,12 +52,12 @@ Valid velocities are:
 ## Midi stored internally as 8 byte sequences:
 
 ```
-tt tt tt tt ci nn vv xx
+tt tt tt tt ci nn vv vv
 ```
 
-- `t` - start time (in ms)
+- `t` - Time delta (in ticks, variable-length quantity[7-bit])
 - `c` - MIDI Command (9 for on, 8 for off)
-- `i` - instrument (channel, in reality)
-- `n` - note
-- `v` - velocity
-- `x` - unused
+- `i` - Instrument (channel, in reality, 0-15)
+- `n` - Note (0-127)
+- `v` - Velocity (0x80vv, last byte contains usable velocity)
+
