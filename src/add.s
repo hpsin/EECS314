@@ -15,16 +15,6 @@ add_note:
 	la $a0, add_note_msg
 	syscall
 
-	#load byte 2,3 store byte 2,3 of time in MIDI_ON bytes 0,
-	lw $t0, time
-	sw $t0, MIDI_ON
-
-	move $t3, $ra
-	jal add_rest #increment time
-	move $ra, $t3
-
-	lw $t0, time($zero)
-	sw $t0, MIDI_OFF($zero)
 	# store 0x90 (on) + ii in byte 4
 	li $t3, 4
 	li $t0, 0x90
@@ -42,10 +32,40 @@ add_note:
 	sb $t2, MIDI_OFF($t3)
 	# store velocity in byte 6
 	li $t3, 6
+	addi $a1, $a1, 0x8000
 	sb $a1, MIDI_ON($t3)
 	sb $a1, MIDI_OFF($t3)
 
+	#load byte 2,3 store byte 2,3 of time in MIDI_ON bytes 0,
+	lw $a0, time		# Get rest time
+	li $t0, 120			#480 ticks per quarter note
+	mul $a0, $a0, $t0  #convert to ticks from 16th notes
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	# Call convert time to 7 bit.
+	jal mem_seven_bit
+	# pop the return address from the stack
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
 
+	sw $v0, MIDI_ON($zero)
+	
+	# Reset time to 0
+	sw $zero, time
+
+	move $a0, $a2		#Get delta
+	mul $a0, $a0, $t0  #Convert from 16th notes to ticks
+	
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	# Call convert duration to 7 bit.
+	jal mem_seven_bit
+	# pop the return address from the stack
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+	
+	sw $v0, MIDI_OFF($zero)
+	
 	# push the return address to the stack
 	addi $sp, $sp, -4
 	sw $ra, 0($sp)
@@ -70,9 +90,6 @@ add_rest:
 	la $a0, add_rest_msg
 	syscall
 	
-	ble $a2, 127, good_time
-	li $a2, 127 #max duration is 127.
-	good_time:
 	lw $t0, time($zero)
 	add $t0, $t0, $a2		# time += duration
 	sw $t0, time($zero)
@@ -83,10 +100,10 @@ add_rest:
 add_note_msg:	.asciiz "Adding note\n"
 add_note_bad_instrument_msg:	 .asciiz "Invalid instrument. Enter a number between 0 and 15 (inclusive)\n"
 add_rest_msg:	.asciiz "Adding rest\n"
-MIDI_ON: .word  0, 0 	#  (hex) tt tt tt tt ci nn vv xx
+MIDI_ON: .word  0, 0 	#  (hex) tt tt tt tt ci nn 80vv
 MIDI_OFF: .word 0, 0 	#   	t: absolute time.
 			#   	c: Command (9 = on, 8=0ff)
 			#	i: note
 			#	v: velocity
 			#	x: undefined
-time: .space 4		#	Current time.  Should be set at time of save/load.  Is a word, but only first 2 bytes should be used
+time: .space 4		#	Current rest duration.  Should only go up to 2^28
