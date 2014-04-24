@@ -1,7 +1,8 @@
 	.data
 file_buffer: .space 100000 #MIDI file to read will not exceed 100K for complex files
-midi_header: .byte 0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00
-track_header: .byte 0x4D, 0x54, 0x72, 0x6b
+midi_header: .byte 0x4d, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xe0
+track_header: .byte 0x4d, 0x54, 0x72, 0x6b
+set_tempo: .byte 0x00, 0xff, 0x51, 0x03, 0x07, 0x53, 0x00
 error_read_msg: .asciiz "ERROR reading file"
 error_open_msg: .asciiz "ERROR opening file"
 error_write_midi_header_msg: .asciiz "ERROR writing the midi header"
@@ -9,6 +10,7 @@ error_write_track_header_msg: .asciiz "ERROR writing the track header"
 error_write_track_length_msg: .asciiz "ERROR writing the track length"
 error_write_file_msg: .asciiz "ERROR writing to the file"
 error_no_file: .asciiz "ERROR no notes to save to file"
+error_set_tempo_msg: .asciiz "ERROR tempo didn't set correctly"
 track_length: .space 4
 
 	.text
@@ -68,11 +70,23 @@ save_file:
 	#write the track_header length section
 	li $v0, 15
 	move $a0, $s6
-	la $a1, track_length
+	lw $t0, mem_size
+	addi $t1, $zero, 7
+	add $a1, $t0, $t1 
 	li $a2, 4 #number of bytes in the midi_header
 	syscall
 	#error check for writing the track length
 	la $s0, error_write_track_length_msg
+	blt  $v0, $zero, errorMsg
+
+	#write the set_tempo section
+	li $v0, 15
+	move $a0, $s6
+	la $a1, set_tempo
+	li $a2, 7 #number of bytes in the midi_header
+	syscall
+	#error check for writing the track length
+	la $s0, error_set_tempo_msg
 	blt  $v0, $zero, errorMsg
 
 	#write the fileBuffer to the file
@@ -118,15 +132,16 @@ load_file:
 
 	sb $zero, file_buffer($v0) #null terminates the fiie
 
-	#print buffer for testing
-	li $v0, 4
-	la $a0, file_buffer
-	syscall
 
 	#close file after reading it
 	li $v0, 16
 	la $a0, filename
 	syscall	
+
+	#print buffer for testing
+	li $v0, 4
+	la $a0, file_buffer
+	syscall
 	
 	jr $ra
 

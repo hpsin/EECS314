@@ -623,6 +623,7 @@ str_to_int:
 
 	add $a1, $zero, $zero
 	add $a0, $zero, $zero
+	add $t7, $zero, $zero
 	
 	# see if the first character is negative sign
 	lb $t1, 0($t0)

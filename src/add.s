@@ -7,8 +7,17 @@
 	.globl add_rest
 
 add_note:
-    	li $t0, 15
-        bgt $a3, $t0, add_note_bad_instrument
+  	li $t0, 15
+	bgt $a3, $t0, add_note_bad_instrument
+
+	addi $sp, $sp, -4
+	sw $ra, 0($sp)
+	# Convert volume for playability.
+	jal map_dynamics_to_volume
+	# pop the return address from the stack
+	lw $ra, 0($sp)
+	addi $sp, $sp, 4
+
     
 	move $t2, $a0
 	li $v0, 4
@@ -54,6 +63,7 @@ add_note:
 	sw $zero, time
 
 	move $a0, $a2		#Get delta
+	li $t0, 120			#480 ticks per quarter note
 	mul $a0, $a0, $t0  #Convert from 16th notes to ticks
 	
 	addi $sp, $sp, -4
