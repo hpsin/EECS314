@@ -37,6 +37,36 @@ save_file:
 
 	#write to the now open file
 
+	li $v0, 15
+	move $a0, $s6
+	la $a0, mem_size
+	li $a2, 4 
+	syscall
+	#error check for writing the file
+	la $s0, error_write_file_msg
+	blt  $v0, $zero, errorMsg
+
+
+	#write the fileBuffer to the file
+	li $v0, 15
+	move $a0, $s6
+	lw $a1, mem_loc
+	la $t0, mem_size
+	lw $a2, 0($t0) #load the length of the track to be written
+	syscall
+	#error check for writing the file
+	la $s0, error_write_file_msg
+	blt  $v0, $zero, errorMsg
+
+	# Close the file 
+  	li   $v0, 16       # system call for close file
+  	move $a0, $s6      # file descriptor to close
+  	syscall            # close file
+	
+	jr $ra
+
+
+
 	#write the midi_header
 	li $v0, 15
 	move $a0, $s6
@@ -128,36 +158,36 @@ load_file:
 	add $a0, $zero, $v0
 	li $v0, 14
 	la $a1, file_buffer
-	add $a2, $zero, 100000 #maximum size of file 
+	add $a2, $zero, 4 #read the first 4 bytes
 	syscall
+	move $s6, $a0
+	 # push the return address to the stack
+    addi $sp, $sp, -4
+    sw $ra, 0($sp)
+
+    #Call diegos method to allocate the  memory
+    lw $a0, file_buffer($zero)
+    jal mem_load
+     # pop the return address from the stack
+    lw $ra, 0($sp)
+    addi $sp, $sp, 4
 
 	#Error check for read file
 	la $s0, error_read_msg
 	blt  $v0, $zero, errorMsg
 
-	sb $zero, file_buffer($v0) #null terminates the fiie
-
-	#gets the length of the track
-	li $t0, 18
-	lhu $t0, file_buffer($t0)
-	li $t1, 20
-	lhu $t1, file_buffer($t1)
-	sll $t0, $t0, 16
-	or $t0, $t1, $t0
-	addi $t0, $t0, -58  #Gets length of track minus the patch headers
-	
-
+	#Read from the file just opened
+	add $a0, $zero, $s6
+	li $v0, 14
+	lw $a1, mem_loc
+	lw $a2, file_buffer($zero) #read the first 4 bytes
+	syscall
 
 	#close file after reading it
 	li $v0, 16
 	la $a0, filename
 	syscall	
 
-	#print buffer for testing
-	li $v0, 4
-	la $a0, file_buffer
-	syscall
-	
 	jr $ra
 
 errorMsg:
