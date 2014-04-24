@@ -140,12 +140,11 @@ continue_cat:
 
 	# calculates the duration
 	addi $a3, $a3, 8
-	add $t0, $zero, $zero
 	lw $t7 0($a3)
-	sub $t1, $t7, $t3
 
 	li $v0, 1
-	add $a0, $zero, $t1
+	add $a0, $zero, $t7
+
 	syscall
 
 	#prints the instrument label
