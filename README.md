@@ -32,6 +32,16 @@ The preprocessor requires python and make to be installed. As you may
 not have this installed we have also included a precompiled version in
 the `mmps.s` file.
 
+## Example files
+
+The submission includes two files for example called: `pokecenter.mid`
+and `pallet_town.mid`. To use these files call `load pokecenter.mid`
+and `load pallet_town.mid`.
+
+_Note_: that if mars is not started from the same directory as these
+files then you must supply an absolute or relative path to the files
+in order for mars to find them.
+
 ## Console commands
 
 - `play` - plays music added or loaded thus far
