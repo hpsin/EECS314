@@ -24,7 +24,7 @@
 ## Compiling and Running
 
 To compile the file run `make clean && make` which will create a file
-called `mmps.s`. Open this file in Mars and assembly it and click
+called `mmps.s`. Open this file in Mars, assembly it and then click
 run. You will most likely need expand the console area in Mars in
 order to see everything and interact with the program properly.
 
