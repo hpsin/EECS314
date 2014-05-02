@@ -30,7 +30,7 @@ order to see everything and interact with the program properly.
 
 The preprocessor requires python and make to be installed. As you may
 not have this installed we have also included a precompiled version in
-the `mmps.s` file.
+the `mmps_final.s` file.
 
 ## Example files
 
