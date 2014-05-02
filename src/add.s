@@ -115,15 +115,17 @@ add_note_bad_instrument:
         jr $ra
 
 add_rest:
+
 	li $v0, 4
 	la $a0, add_rest_msg
 	syscall
 
-	lw $t0, time($zero)
-	add $t0, $t0, $a2		# time += duration
-	sw $t0, time($zero)
+	add $a2, $0, $a1 # set a2 to duration
+	addi $a0, $0, 0 # note 0
+	addi $a1, $0, 1 # velocity pp
+	addi $a3, $0, 0 # instrument 0
 
-	jr $ra
+	j add_note
 
 	.data
 add_note_msg:	.asciiz "Adding note\n"
